@@ -154,6 +154,7 @@ class LLVMGenerator:
         post_block = self.builder.append_basic_block("if.post")
 
         self.builder.branch(cond_block)
+        self.builder.position_at_start(cond_block)
         cond = self.generate(node.if_cond, flag=1)
         self.builder.cbranch(cond, then_block, else_block)
         self.builder.position_at_start(then_block)
