@@ -49,6 +49,11 @@ class TokenKind(Enum):
     Lsqu = 32
     Rsqu = 33
 
+    Eq = 34
+    Ne = 35
+    Ge = 36
+    Le = 37
+
     Eof = 40
     Indent = 41
     Dedent = 42
@@ -96,6 +101,10 @@ def tokenise(source: str, filename: str) -> Generator[Token, None, None]:
         "[": TokenKind.Lsqu,
         "]": TokenKind.Rsqu,
 
+        "==": TokenKind.Eq,
+        "!=": TokenKind.Ne,
+        ">=": TokenKind.Ge,
+        "<=": TokenKind.Le,
         "->": TokenKind.Arrow,
     }
 
