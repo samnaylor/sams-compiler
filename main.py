@@ -619,6 +619,8 @@ class LLVMGenerator:
 
     def _optimise(self) -> llvm.ModuleRef:
         module = llvm.parse_assembly(str(self.module))
+        module.name = module.name
+        module.triple = llvm.Target.from_default_triple().triple
 
         pmb = llvm.create_pass_manager_builder()
         pm = llvm.create_module_pass_manager()
