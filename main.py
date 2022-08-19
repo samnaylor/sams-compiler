@@ -617,8 +617,30 @@ class LLVMGenerator:
         self.locals: dict[str, ir.Value] = {}
         self.functions: dict[str, ir.Function] = {}
 
+    def _optimise(self) -> llvm.ModuleRef:
+        module = llvm.parse_assembly(str(self.module))
+
+        pmb = llvm.create_pass_manager_builder()
+        pm = llvm.create_module_pass_manager()
+
+        pmb.populate(pm)
+        pmb.opt_level = 3
+
+        pm.add_instruction_combining_pass()
+        pm.add_dead_arg_elimination_pass()
+        pm.add_dead_code_elimination_pass()
+        pm.add_function_inlining_pass(1_000)
+        pm.add_cfg_simplification_pass()
+        pm.add_constant_merge_pass()
+
+        pm.run(module)
+
+        module.verify()
+
+        return module
+
     def __str__(self) -> str:
-        return str(self.module)
+        return str(self._optimise())
 
     def generate_default(self, node: Node, *, flag: int = 0) -> None:
         raise NotImplementedError(node.__class__.__name__)
@@ -701,11 +723,27 @@ class LLVMGenerator:
     def generate_Selection(self, node: Selection, *, flag: int = 0) -> ir.Value:
         assert self.builder is not None
 
-        con = self.generate(node.condition, flag=1)
-        lhs = self.generate(node.if_true, flag=1)
-        rhs = self.generate(node.if_alt, flag=1)
+        cond_block = self.builder.append_basic_block("if.cond")
+        true_block = self.builder.append_basic_block("if.true")
+        else_block = self.builder.append_basic_block("if.else")
+        post_block = self.builder.append_basic_block("if.post")
 
-        return self.builder.select(con, lhs, rhs)
+        self.builder.branch(cond_block)
+        self.builder.position_at_start(cond_block)
+        con = self.generate(node.condition, flag=1)
+        self.builder.cbranch(con, true_block, else_block)
+        self.builder.position_at_start(true_block)
+        lhs = self.generate(node.if_true, flag=1)
+        self.builder.branch(post_block)
+        self.builder.position_at_start(else_block)
+        rhs = self.generate(node.if_alt, flag=1)
+        self.builder.branch(post_block)
+        self.builder.position_at_start(post_block)
+        phi = self.builder.phi(lhs.type)
+        phi.add_incoming(lhs, true_block)
+        phi.add_incoming(rhs, else_block)
+
+        return phi
 
     def generate_ComparisonOp(self, node: ComparisonOp, *, flag: int = 0) -> ir.Value:
         assert self.builder is not None
