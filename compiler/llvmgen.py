@@ -21,7 +21,8 @@ from .ast import (
     IntLiteral,
     Call,
     ArrayLiteral,
-    Index
+    Index,
+    IfElse
 )
 
 
@@ -84,6 +85,12 @@ class LLVMGenerator:
             self.locals[arg.name] = alloca
 
         self.generate(node.function_body)
+
+        for block in self.builder.function.basic_blocks:
+            if not block.is_terminated:
+                self.builder.position_at_end(block)
+                self.builder.unreachable()
+
         self.builder = None
 
     def generate_FunctionSignature(self, node: FunctionSignature, *, flag: int = 0) -> ir.Value:
@@ -137,6 +144,28 @@ class LLVMGenerator:
         self.builder.position_at_start(post_block)
 
         # TODO: this errors if we return from within the loop
+
+    def generate_IfElse(self, node: IfElse, *, flag: int = 0) -> None:
+        assert self.builder is not None
+
+        cond_block = self.builder.append_basic_block("if.cond")
+        then_block = self.builder.append_basic_block("if.then")
+        else_block = self.builder.append_basic_block("if.else")
+        post_block = self.builder.append_basic_block("if.post")
+
+        self.builder.branch(cond_block)
+        cond = self.generate(node.if_cond, flag=1)
+        self.builder.cbranch(cond, then_block, else_block)
+        self.builder.position_at_start(then_block)
+        self.generate(node.if_then)
+        self.builder.branch(post_block)
+        self.builder.position_at_start(else_block)
+
+        if node.if_else is not None:
+            self.generate(node.if_else)
+
+        self.builder.branch(post_block)
+        self.builder.position_at_start(post_block)
 
     def generate_Var(self, node: Var, *, flag: int = 0) -> None:
         for decl in node.declarators:
