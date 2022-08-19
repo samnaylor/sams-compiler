@@ -3,4 +3,10 @@ fun factorial(n i32) -> i32:
 
 
 fun main() -> i32:
-    return factorial(5)
+    var i i32 = 0, values [i32, 5] = [1, 2, 3, 4, 5], result i32 = 0
+
+    while i < 5:
+        result = result + factorial(values[i])
+        i = i + 1
+
+    return result

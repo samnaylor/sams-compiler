@@ -202,6 +202,7 @@ class Stmt(Node):
 class TypeIdentifier(Node):
     typename: str
     is_array: bool = field(default=False)
+    array_sz: int = field(default=0)
 
 
 @dataclass(slots=True, frozen=True)
@@ -403,8 +404,12 @@ class Parser:
             self.advance()
             type = self.parse_type_identifier()
             assert not type.is_array, "2D arrays not yet supported!"
+            self.expect(TokenKind.Comma)
+            size = self.top.value
+            assert size is not None and size.isdigit()
+            self.advance()
             self.expect(TokenKind.Rsqu)
-            return TypeIdentifier(type.typename, True)
+            return TypeIdentifier(type.typename, True, int(size))
         else:
             parser_error(self.filename, self.top.location, f"Unexpected `{self.top.value}` in parse_type_identifier")
 
@@ -683,10 +688,15 @@ class LLVMGenerator:
         return function
 
     def generate_TypeIdentifier(self, node: TypeIdentifier, *, flag: int = 0) -> ir.Type:
-        if node.typename == "i32":
-            return ir.IntType(32)
+        base: ir.Type
 
-        raise TypeError(node.typename)
+        if node.typename == "i32":
+            base = ir.IntType(32)
+
+        if node.is_array:
+            base = ir.ArrayType(base, node.array_sz)
+
+        return base
 
     def generate_Block(self, node: Block, *, flag: int = 0) -> None:
         for stmt in node.body:
@@ -696,6 +706,40 @@ class LLVMGenerator:
         assert self.builder is not None
 
         self.builder.ret(self.generate(node.return_value, flag=1))
+
+    def generate_While(self, node: While, *, flag: int = 0) -> None:
+        assert self.builder is not None
+
+        cond_block = self.builder.append_basic_block("while.cond")
+        body_block = self.builder.append_basic_block("while.body")
+        post_block = self.builder.append_basic_block("while.post")
+
+        self.builder.branch(cond_block)
+        self.builder.position_at_start(cond_block)
+        cond = self.generate(node.condition, flag=1)
+        self.builder.cbranch(cond, body_block, post_block)
+        self.builder.position_at_start(body_block)
+        self.generate(node.body)
+        self.builder.branch(cond_block)
+        self.builder.position_at_start(post_block)
+
+        # TODO: this errors if we return from within the loop
+
+    def generate_Var(self, node: Var, *, flag: int = 0) -> None:
+        for decl in node.declarators:
+            self.generate(decl)
+
+    def generate_Declarator(self, node: Declarator, *, flag: int = 0) -> None:
+        assert self.builder is not None
+
+        typ = self.generate(node.type_id)
+        alloca = self.builder.alloca(typ, name=node.identifier)
+        value = self.generate(node.initialiser, flag=1)
+        self.builder.store(value, alloca)
+        self.locals[node.identifier] = alloca
+
+    def generate_Expr_(self, node: Expr_, *, flag: int = 0) -> None:
+        self.generate(node.expression)
 
     def generate_BinaryOp(self, node: BinaryOp, *, flag: int = 0) -> None:
         assert self.builder is not None
@@ -721,6 +765,16 @@ class LLVMGenerator:
             return self.builder.load(alloca, name=node.var_name)
 
         return alloca
+
+    def generate_Assignment(self, node: Assignment, *, flag: int = 0) -> ir.Value:
+        assert self.builder is not None
+
+        ptr = self.generate(node.target, flag=0)
+        val = self.generate(node.value, flag=1)
+
+        self.builder.store(val, ptr)
+
+        return self.builder.load(ptr)
 
     def generate_Selection(self, node: Selection, *, flag: int = 0) -> ir.Value:
         assert self.builder is not None
@@ -765,6 +819,22 @@ class LLVMGenerator:
         args = [self.generate(arg, flag=1) for arg in node.callargs]
 
         return self.builder.call(func, args)
+
+    def generate_ArrayLiteral(self, node: ArrayLiteral, *, flag: int = 0) -> ir.Value:
+        return ir.Constant.literal_array([self.generate(value, flag=1) for value in node.arr_values])
+
+    def generate_Index(self, node: Index, *, flag: int = 0) -> ir.Value:
+        assert self.builder is not None
+
+        target = self.generate(node.target, flag=0)
+        index = self.generate(node.index, flag=1)
+
+        value = self.builder.gep(target, (ir.IntType(32)(0), index))
+
+        if flag == 1:
+            return self.builder.load(value)
+
+        return value
 
 # endregion
 
