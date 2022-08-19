@@ -53,6 +53,7 @@ class TokenKind(Enum):
     Ne = 35
     Ge = 36
     Le = 37
+    Exclam = 38
 
     Eof = 40
     Indent = 41
@@ -100,6 +101,7 @@ def tokenise(source: str, filename: str) -> Generator[Token, None, None]:
         ")": TokenKind.Rpar,
         "[": TokenKind.Lsqu,
         "]": TokenKind.Rsqu,
+        "!": TokenKind.Exclam,
 
         "==": TokenKind.Eq,
         "!=": TokenKind.Ne,
