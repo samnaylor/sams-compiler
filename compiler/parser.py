@@ -251,10 +251,10 @@ class Parser:
     def parse_relational(self) -> Expr:
         lhs = self.parse_additive()
 
-        if not (self.match(TokenKind.Gt) or self.match(TokenKind.Lt)):
+        if not self.match(TokenKind.Eq, TokenKind.Ne, TokenKind.Ge, TokenKind.Le, TokenKind.Gt, TokenKind.Lt):
             return lhs
 
-        op = cast(Literal["<", ">"], self.top.value)
+        op = cast(Literal["==", "!=", ">=", "<=", "<", ">"], self.top.value)
         self.advance()
         rhs = self.parse_additive()
 
