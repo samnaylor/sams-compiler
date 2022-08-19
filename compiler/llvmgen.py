@@ -2,16 +2,16 @@ from typing import cast
 from llvmlite import ir, binding as llvm
 
 from .ast import (
-    Node, 
-    Program, 
-    FunctionDefinition, 
-    FunctionSignature, 
-    TypeIdentifier, 
-    Block, 
-    Return, 
-    While, 
-    Var, 
-    Declarator, 
+    Node,
+    Program,
+    FunctionDefinition,
+    FunctionSignature,
+    TypeIdentifier,
+    Block,
+    Return,
+    While,
+    Var,
+    Declarator,
     Expr_,
     BinaryOp,
     Variable,
@@ -23,6 +23,7 @@ from .ast import (
     ArrayLiteral,
     Index
 )
+
 
 class LLVMGenerator:
     def __init__(self, filename: str):

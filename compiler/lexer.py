@@ -6,6 +6,7 @@ from string import ascii_letters, digits
 
 from .constants import RED, RESET, CYAN
 
+
 @dataclass(slots=True, frozen=True, repr=False)
 class Location:
     line: int

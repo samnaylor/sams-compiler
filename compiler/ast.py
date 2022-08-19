@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from typing import Literal
 
+
 class Node:
     " Base Node for all node types "
 

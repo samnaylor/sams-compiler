@@ -7,6 +7,7 @@ from llvmlite import binding as llvm
 from .parser import Parser
 from .llvmgen import LLVMGenerator
 
+
 def compile(filename: str) -> int:
     path = Path(filename)
 
@@ -36,7 +37,7 @@ def compile(filename: str) -> int:
         cmd = f"clang {path.stem}.ll -o {out}.exe"
     else:
         cmd = f"clang {path.stem}.ll -o {out}"
-    
+
     os.system(cmd)
 
     os.remove(f"{path.stem}.ll")

@@ -28,6 +28,7 @@ from .ast import (
     Program,
 )
 
+
 def parser_error(filename: str, location: Location, message: str) -> None:
     generic_error("Parser Error", filename, location, message)
 
