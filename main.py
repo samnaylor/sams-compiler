@@ -1,11 +1,12 @@
 import sys
 
 from enum import Enum
-from pprint import pprint
 from string import digits, ascii_letters
 from typing import cast, Literal, Generator
 from os.path import relpath
 from dataclasses import field, dataclass
+
+from llvmlite import ir, binding as llvm
 
 
 # region Constants
@@ -604,6 +605,130 @@ class Parser:
 # endregion
 
 
+# region LLVM Generator
+
+class LLVMGenerator:
+    def __init__(self, filename: str):
+        self.module = ir.Module()
+        self.module.name = filename
+
+        self.builder: ir.IRBuilder | None = None
+
+        self.locals: dict[str, ir.Value] = {}
+        self.functions: dict[str, ir.Function] = {}
+
+    def __str__(self) -> str:
+        return str(self.module)
+
+    def generate_default(self, node: Node, *, flag: int = 0) -> None:
+        raise NotImplementedError(node.__class__.__name__)
+
+    def generate(self, node: Node, *, flag: int = 0) -> ir.Value | None:
+        return getattr(self, f"generate_{node.__class__.__name__}", self.generate_default)(node, flag=flag)
+
+    def generate_Program(self, node: Program, *, flag: int = 0) -> None:
+        for fdef in node.function_defs:
+            self.generate(fdef)
+
+    def generate_FunctionDefinition(self, node: FunctionDefinition, *, flag: int = 0) -> None:
+        self.locals = {}
+
+        func = cast(ir.Function, self.generate(node.function_signature))
+        self.builder = ir.IRBuilder(func.append_basic_block("entry"))
+
+        for arg in func.args:
+            alloca = self.builder.alloca(arg.type, name=arg.name)
+            self.builder.store(arg, alloca)
+            self.locals[arg.name] = alloca
+
+        self.generate(node.function_body)
+        self.builder = None
+
+    def generate_FunctionSignature(self, node: FunctionSignature, *, flag: int = 0) -> ir.Value:
+        retty = self.generate(node.function_retty)
+        types = [self.generate(param.parameter_type) for param in node.function_params]
+
+        signature = ir.FunctionType(retty, types)
+        function = ir.Function(self.module, signature, node.function_name)
+
+        for (arg, param) in zip(function.args, node.function_params):
+            arg.name = param.parameter_name
+
+        self.functions[node.function_name] = function
+
+        return function
+
+    def generate_TypeIdentifier(self, node: TypeIdentifier, *, flag: int = 0) -> ir.Type:
+        if node.typename == "i32":
+            return ir.IntType(32)
+
+        raise TypeError(node.typename)
+
+    def generate_Block(self, node: Block, *, flag: int = 0) -> None:
+        for stmt in node.body:
+            self.generate(stmt)
+
+    def generate_Return(self, node: Return, *, flag: int = 0) -> None:
+        assert self.builder is not None
+
+        self.builder.ret(self.generate(node.return_value, flag=1))
+
+    def generate_BinaryOp(self, node: BinaryOp, *, flag: int = 0) -> None:
+        assert self.builder is not None
+
+        lhs = self.generate(node.lhs, flag=1)
+        rhs = self.generate(node.rhs, flag=1)
+
+        match node.op:
+            case "+": return self.builder.add(lhs, rhs)
+            case "-": return self.builder.sub(lhs, rhs)
+            case "*": return self.builder.mul(lhs, rhs)
+            case _: raise ArithmeticError(node.op)
+
+    def generate_Variable(self, node: Variable, *, flag: int = 0) -> ir.Value:
+        assert self.builder is not None
+
+        if (func := self.functions.get(node.var_name)) is not None:
+            return func
+
+        alloca = self.locals[node.var_name]
+
+        if flag:
+            return self.builder.load(alloca, name=node.var_name)
+
+        return alloca
+
+    def generate_Selection(self, node: Selection, *, flag: int = 0) -> ir.Value:
+        assert self.builder is not None
+
+        con = self.generate(node.condition, flag=1)
+        lhs = self.generate(node.if_true, flag=1)
+        rhs = self.generate(node.if_alt, flag=1)
+
+        return self.builder.select(con, lhs, rhs)
+
+    def generate_ComparisonOp(self, node: ComparisonOp, *, flag: int = 0) -> ir.Value:
+        assert self.builder is not None
+
+        lhs = self.generate(node.lhs, flag=1)
+        rhs = self.generate(node.rhs, flag=1)
+
+        return self.builder.icmp_signed(node.op, lhs, rhs)
+
+    def generate_IntLiteral(self, node: IntLiteral, *, flag: int = 0) -> ir.Value:
+        return ir.IntType(32)(node.int_value)
+
+    def generate_Call(self, node: Call, *, flag: int = 0) -> ir.Value:
+        assert self.builder is not None
+
+        func = self.generate(node.callee, flag=1)
+        args = [self.generate(arg, flag=1) for arg in node.callargs]
+
+        return self.builder.call(func, args)
+
+# endregion
+
+
 def main() -> int:
     filename = relpath("examples/factorial.sam")
 
@@ -612,7 +737,14 @@ def main() -> int:
 
     tree = Parser(source, filename).parse()
 
-    pprint(tree)
+    llvm.initialize()
+    llvm.initialize_native_target()
+    llvm.initialize_all_asmprinters()
+
+    codegen = LLVMGenerator(filename)
+    codegen.generate(tree)
+
+    print(codegen)
 
     return 0
 

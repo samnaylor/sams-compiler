@@ -1,5 +1,5 @@
 fun factorial(n i32) -> i32:
-    return n * ((n > 1) ? factorial(n - 1) : 1)
+    return (n > 1) ? (n * factorial(n - 1)) : 1
 
 
 fun main() -> i32:
