@@ -13,12 +13,14 @@ statement ::= block_statement
             | while_statement
             | return_statement
             | expr_statement
+            | ifelse_statement
 
 block_statement  ::= ":" INDENT statement+ DEDENT
 var_statement    ::= "var" declarator ("," declarator)* 
 while_statement  ::= "while" expression ":" statement
 return_statement ::= "return" expression
 expr_statement   ::= expression
+ifelse_statement ::= "if" expression ":" statement ["else" ":" statement]
 
 declarator  ::= identifier type_identifier "=" initialiser
 initialiser ::= expression
