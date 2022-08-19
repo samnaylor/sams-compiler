@@ -26,6 +26,7 @@ from .ast import (
     BinaryOp,
     Return,
     Program,
+    IfElse
 )
 
 
@@ -131,6 +132,8 @@ class Parser:
             return self.parse_while_statement()
         elif self.match(TokenKind.Return):
             return self.parse_return_statement()
+        elif self.match(TokenKind.If):
+            return self.parse_if_statement()
         else:
             return self.parse_expr_statement()
 
@@ -171,6 +174,20 @@ class Parser:
         self.expect(TokenKind.Return)
         value = self.parse_expression()
         return Return(value)
+
+    def parse_if_statement(self) -> IfElse:
+        self.expect(TokenKind.If)
+        if_cond = self.parse_expression()
+        self.expect(TokenKind.Colon)
+        if_then = self.parse_statement()
+
+        if not self.match(TokenKind.Else):
+            return IfElse(if_cond, if_then, None)
+
+        self.expect(TokenKind.Else)
+        self.expect(TokenKind.Colon)
+        if_else = self.parse_statement()
+        return IfElse(if_cond, if_then, if_else)
 
     def parse_expr_statement(self) -> Expr_:
         expr = self.parse_expression()
