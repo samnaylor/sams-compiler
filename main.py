@@ -605,7 +605,7 @@ class Parser:
 
 
 def main() -> int:
-    filename = relpath("sample.sam")
+    filename = relpath("examples/factorial.sam")
 
     with open(filename, "r") as f:
         source = f.read()
