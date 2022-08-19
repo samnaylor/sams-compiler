@@ -58,7 +58,7 @@ The following are some of the basic features we're hoping to add to the language
   <tr>
     <td align="center">
       <a href="https://github.com/samnaylor">
-        <img src="https://avatars.githubusercontent.com/u/57679802?s=40&v=4" width="100px;" />
+        <img src="https://avatars.githubusercontent.com/u/57679802?v=4" style="border-radius: 100%; height: auto;" width="100px;" />
         <br />
         <sub>Sam Naylor</sub>
       </a>
@@ -66,7 +66,7 @@ The following are some of the basic features we're hoping to add to the language
     </td>
     <td align="center">
       <a href="https://github.com/Wraith29">
-        <img src="https://avatars.githubusercontent.com/u/55260788?v=4" width="100px;" />
+        <img src="https://avatars.githubusercontent.com/u/55260788?v=4" style="border-radius: 100%; height: auto;" width="100px;" />
         <br />
         <sub>Isaac Naylor</sub>
       </a>
