@@ -3,3 +3,6 @@
 
 *.ll
 bin/
+
+*.pyc
+/__pycache__
