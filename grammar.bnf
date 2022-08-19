@@ -1,0 +1,48 @@
+program             ::= function_definition*
+function_definition ::= function_signature ":" statement
+function_signature  ::= "fun" identifier "(" [function_parameters] ")" "->" type_identifier
+
+function_parameters ::= function_parameter ("," function_parameter)*
+function_parameter  ::= identifier type_identifier
+
+type_identifier ::= "i32"
+                  | "[" type_identifier "]"  
+
+statement ::= block_statement
+            | var_statement
+            | while_statement
+            | return_statement
+            | expr_statement
+
+block_statement  ::= ":" INDENT statement+ DEDENT
+var_statement    ::= "var" declarator ("," declarator)* 
+while_statement  ::= "while" expression ":" statement
+return_statement ::= "return" expression
+expr_statement   ::= expression
+
+declarator  ::= identifier type_identifier "=" initialiser
+initialiser ::= expression
+              | "[" [expression ("," expression)*] "]"
+
+expression     ::= assignment
+assignment     ::= conditional
+                 | postfix "=" assignment
+conditional    ::= relational
+                 | relational "?" expression ":" conditional
+relational     ::= additive
+                 | relational ">" additive
+                 | relational "<" additive
+additive       ::= multiplicative
+                 | additive ("+" multiplicative)*
+                 | additive ("-" multiplicative)*
+multiplicative ::= postfix
+                 | multiplicative ("*" postfix)*
+postfix        ::= primary
+                 | postfix "[" expression "]"
+                 | postfix "(" [callargs] ")"
+primary        ::= identifier
+                 | constant
+                 | "(" expression ")"
+constant       ::= INTEGER
+
+callargs ::= expression ("," expression)*
