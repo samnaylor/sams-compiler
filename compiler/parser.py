@@ -43,12 +43,12 @@ class Parser:
     def advance(self) -> None:
         self.top = next(self.tokens)
 
-    def match(self, token_kind: TokenKind, *, value: str | None = None) -> bool:
+    def match(self, *token_kinds: TokenKind, value: str | None = None) -> bool:
         # TODO: Support matching of multiple token kinds at once
         if value is None:
-            return self.top.kind == token_kind
+            return self.top.kind in token_kinds
 
-        return (self.top.kind == token_kind) and (self.top.value == value)
+        return (self.top.kind in token_kinds) and (self.top.value == value)
 
     def expect(self, token_kind: TokenKind) -> None:
         if not self.match(token_kind):
