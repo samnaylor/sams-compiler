@@ -107,6 +107,13 @@ class Var(Stmt):
 
 
 @dataclass(slots=True, frozen=True)
+class IfElse(Stmt):
+    if_cond: Expr
+    if_then: Stmt
+    if_else: Stmt | None
+
+
+@dataclass(slots=True, frozen=True)
 class Block(Stmt):
     body: list[Stmt]
 
