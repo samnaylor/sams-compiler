@@ -1,6 +1,4 @@
-fun factorial(n i32) -> i32:
-    return n * ((n > 1) ? (factorial(n - 1)) : 1)
-
+import factorial
 
 fun main() -> i32:
     var i i32 = 0, values [i32, 5] = [1, 2, 3, 4, 5], result i32 = 0

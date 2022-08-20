@@ -1,4 +1,5 @@
-program             ::= function_definition*
+program             ::= imports* function_definition*
+imports             ::= "import" identifier
 function_definition ::= function_signature ":" statement
 function_signature  ::= "fun" identifier "(" [function_parameters] ")" "->" type_identifier
 

@@ -34,6 +34,7 @@ class TokenKind(Enum):  # TODO: clean this up :)
     Else = 15
     Coninute = 16
     Break = 17
+    Import = 18
 
     Gt = 20
     Lt = 21
@@ -92,7 +93,8 @@ def tokenise(source: str, filename: str) -> Generator[Token, None, None]:
         "if": TokenKind.If,
         "else": TokenKind.Else,
         "continue": TokenKind.Coninute,
-        "break": TokenKind.Break
+        "break": TokenKind.Break,
+        "import": TokenKind.Import
     }
 
     symbols = {

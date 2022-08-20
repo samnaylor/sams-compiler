@@ -28,7 +28,8 @@ from .ast import (
     Program,
     IfElse,
     Break,
-    Continue
+    Continue,
+    Import
 )
 
 
@@ -59,12 +60,23 @@ class Parser:
         self.advance()
 
     def parse(self) -> Node:
+        imports: list[Import] = []
         function_defs: list[FunctionDefinition] = []
 
         while not self.match(TokenKind.Eof):
-            function_defs.append(self.parse_function_definition())
+            if self.match(TokenKind.Fun):
+                function_defs.append(self.parse_function_definition())
+            elif self.match(TokenKind.Import):
+                imports.append(self.parse_import())
 
-        return Program(function_defs)
+        return Program(imports, function_defs)
+
+    def parse_import(self) -> Import:
+        self.expect(TokenKind.Import)
+        mod_name = self.top.value
+        assert mod_name is not None
+        self.advance()
+        return Import(mod_name)
 
     def parse_function_definition(self) -> FunctionDefinition:
         signature = self.parse_function_signature()

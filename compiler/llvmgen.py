@@ -24,8 +24,11 @@ from .ast import (
     Index,
     IfElse,
     Break,
-    Continue
+    Continue,
+    Import
 )
+
+from .parser import Parser
 
 
 class LLVMGenerator:
@@ -75,8 +78,17 @@ class LLVMGenerator:
         return getattr(self, f"generate_{node.__class__.__name__}", self.generate_default)(node, flag=flag)
 
     def generate_Program(self, node: Program, *, flag: int = 0) -> None:
+        for imp in node.imports:
+            self.generate(imp)
+
         for fdef in node.function_defs:
             self.generate(fdef, flag=flag)
+
+    def generate_Import(self, node: Import, *, flag: int = 0) -> None:
+        with open(f"{node.module_name}.sam", "r") as f:
+            tree = Parser(f.read(), node.module_name).parse()
+
+        self.generate(tree, flag=1)
 
     def generate_FunctionDefinition(self, node: FunctionDefinition, *, flag: int = 0) -> None:
         if flag == 1 and node.function_signature.function_name == "main":

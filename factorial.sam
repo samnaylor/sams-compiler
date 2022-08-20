@@ -1,0 +1,2 @@
+fun factorial(n i32) -> i32:
+    return n * ((n > 1) ? (factorial(n - 1)) : 1)

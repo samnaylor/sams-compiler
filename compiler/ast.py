@@ -129,6 +129,11 @@ class Break(Stmt):
 
 
 @dataclass(slots=True, frozen=True)
+class Import(Node):
+    module_name: str
+
+
+@dataclass(slots=True, frozen=True)
 class FunctionParameter(Node):
     parameter_name: str
     parameter_type: TypeIdentifier
@@ -149,4 +154,5 @@ class FunctionDefinition(Node):
 
 @dataclass(slots=True, frozen=True)
 class Program(Node):
+    imports: list[Import]
     function_defs: list[FunctionDefinition]

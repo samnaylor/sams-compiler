@@ -57,6 +57,9 @@ The following are some of the basic features we're hoping to add to the language
   - [ ] Use of pointers and references
 - [ ] Extern functions
 - [ ] "Imports" or "Modules"
+  - [x] "import" keyword
+  - [ ] Relative to compilation file not compiler
+  - [ ] namespace system? access using `<module name>.<function>`?
   - [ ] libc extern libraries as a stdlib
 - [ ] Structures
   - [ ] Define syntax
