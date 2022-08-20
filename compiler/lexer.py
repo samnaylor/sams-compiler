@@ -22,7 +22,7 @@ def generic_error(errtype: str, filename: str, location: Location, message: str)
     sys.exit(1)
 
 
-class TokenKind(Enum):
+class TokenKind(Enum):  # TODO: clean this up :)
     IntLiteral = 0
     Identifier = 1
 
@@ -54,6 +54,8 @@ class TokenKind(Enum):
     Ge = 36
     Le = 37
     Exclam = 38
+    Slash = 39
+    Percent = 43
 
     Eof = 40
     Indent = 41
@@ -102,6 +104,8 @@ def tokenise(source: str, filename: str) -> Generator[Token, None, None]:
         "[": TokenKind.Lsqu,
         "]": TokenKind.Rsqu,
         "!": TokenKind.Exclam,
+        "/": TokenKind.Slash,
+        "%": TokenKind.Percent,
 
         "==": TokenKind.Eq,
         "!=": TokenKind.Ne,
