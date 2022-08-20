@@ -288,7 +288,7 @@ class LLVMGenerator:
         target = self.generate(node.target, flag=0)
         index = self.generate(node.index, flag=1)
 
-        value = self.builder.gep(target, (ir.IntType(32)(0), index))
+        value = self.builder.gep(target, (ir.IntType(32)(0), index), inbounds=True)
 
         if flag == 1:
             return self.builder.load(value)
