@@ -1,5 +1,5 @@
-from dataclasses import dataclass, field
 from typing import Literal
+from dataclasses import dataclass, field
 
 
 class Node:
@@ -53,14 +53,14 @@ class Index(Expr):
 
 @dataclass(slots=True, frozen=True)
 class BinaryOp(Expr):
-    op: Literal["+", "-", "*"]
+    op: Literal["+", "-", "*", "/", "%"]
     lhs: Expr
     rhs: Expr
 
 
 @dataclass(slots=True, frozen=True)
-class ComparisonOp(Expr):  # ? Python-Style chained comparisons
-    op: Literal[">", "<"]
+class ComparisonOp(Expr):
+    op: Literal[">", "<", "==", "!=", ">=", "<="]
     lhs: Expr
     rhs: Expr
 
