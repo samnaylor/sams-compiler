@@ -1,6 +1,8 @@
 import os
-from sys import platform
+import sys
+
 from pathlib import Path
+from subprocess import check_output, CalledProcessError
 
 from llvmlite import binding as llvm
 
@@ -10,8 +12,6 @@ from .llvmgen import LLVMGenerator
 
 def compile(filename: str) -> int:
     path = Path(filename)
-
-    print(path.name)
 
     with open(filename, "r") as f:
         source = f.read()
@@ -33,13 +33,16 @@ def compile(filename: str) -> int:
 
     out = Path("bin").joinpath(path.stem)
 
-    if platform == "windows":
-        cmd = f"clang {path.stem}.ll -o {out}.exe"
+    if sys.platform == "windows":
+        cmd = ["clang", f"{path.stem}.ll", "-o" f"{out}.exe"]
     else:
-        cmd = f"clang {path.stem}.ll -o {out}"
+        cmd = ["clang", f"{path.stem}.ll", "-o", f"{out}"]
 
-    os.system(cmd)
-
-    os.remove(f"{path.stem}.ll")
+    try:
+        check_output(cmd)
+    except CalledProcessError as e:
+        sys.exit(e.returncode)
+    finally:
+        os.remove(f"{path.stem}.ll")
 
     return 0
