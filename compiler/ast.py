@@ -1,11 +1,12 @@
 from typing import Literal
 from dataclasses import dataclass, field
 
+from .lexer import Location
 
+@dataclass(slots=True, frozen=True)
 class Node:
     " Base Node for all node types "
-
-    # TODO: Location information inside of nodes
+    location: Location
 
 
 class Expr(Node):

@@ -69,20 +69,20 @@ class Parser:
             elif self.match(TokenKind.Import):
                 imports.append(self.parse_import())
 
-        return Program(imports, function_defs)
+        return Program(self.top.location, imports, function_defs)
 
     def parse_import(self) -> Import:
         self.expect(TokenKind.Import)
         mod_name = self.top.value
         assert mod_name is not None
         self.advance()
-        return Import(mod_name)
+        return Import(self.top.location, mod_name)
 
     def parse_function_definition(self) -> FunctionDefinition:
         signature = self.parse_function_signature()
         self.expect(TokenKind.Colon)
         body = self.parse_statement()
-        return FunctionDefinition(signature, body)
+        return FunctionDefinition(self.top.location, signature, body)
 
     def parse_function_signature(self) -> FunctionSignature:
         self.expect(TokenKind.Fun)
@@ -100,7 +100,7 @@ class Parser:
 
         retty = self.parse_type_identifier()
 
-        return FunctionSignature(name,   parameters, retty)
+        return FunctionSignature(self.top.location, name, parameters, retty)
 
     def parse_function_parameters(self) -> list[FunctionParameter]:
         parameters: list[FunctionParameter] = []
@@ -117,12 +117,12 @@ class Parser:
         assert name is not None
         self.advance()
         type = self.parse_type_identifier()
-        return FunctionParameter(name, type)
+        return FunctionParameter(self.top.location, name, type)
 
     def parse_type_identifier(self) -> TypeIdentifier:
         if self.match(TokenKind.Identifier, value="i32"):
             self.advance()
-            return TypeIdentifier("i32")
+            return TypeIdentifier(self.top.location, "i32")
         elif self.match(TokenKind.Lsqu):
             self.advance()
             type = self.parse_type_identifier()
@@ -132,7 +132,7 @@ class Parser:
             assert size is not None and size.isdigit()
             self.advance()
             self.expect(TokenKind.Rsqu)
-            return TypeIdentifier(type.typename, True, int(size))
+            return TypeIdentifier(self.top.location, type.typename, True, int(size))
         else:
             parser_error(self.filename, self.top.location, f"Unexpected `{self.top.value}` in parse_type_identifier")
 
@@ -163,7 +163,7 @@ class Parser:
             children.append(self.parse_statement())
 
         self.expect(TokenKind.Dedent)
-        return Block(children)
+        return Block(self.top.location, children)
 
     def parse_var_statement(self) -> Var:
         self.expect(TokenKind.Var)
@@ -178,7 +178,7 @@ class Parser:
             self.advance()
             declarators.append(self.parse_declarator())
 
-        return Var(declarators)
+        return Var(self.top.location, declarators)
 
     def parse_while_statement(self) -> While:
         self.expect(TokenKind.While)
@@ -186,12 +186,12 @@ class Parser:
         self.expect(TokenKind.Colon)
         body = self.parse_statement()
 
-        return While(cond, body)
+        return While(self.top.location, cond, body)
 
     def parse_return_statement(self) -> Return:
         self.expect(TokenKind.Return)
         value = self.parse_expression()
-        return Return(value)
+        return Return(self.top.location, value)
 
     def parse_if_statement(self) -> IfElse:
         self.expect(TokenKind.If)
@@ -200,16 +200,16 @@ class Parser:
         if_then = self.parse_statement()
 
         if not self.match(TokenKind.Else):
-            return IfElse(if_cond, if_then, None)
+            return IfElse(self.top.location, if_cond, if_then, None)
 
         self.expect(TokenKind.Else)
         self.expect(TokenKind.Colon)
         if_else = self.parse_statement()
-        return IfElse(if_cond, if_then, if_else)
+        return IfElse(self.top.location, if_cond, if_then, if_else)
 
     def parse_expr_statement(self) -> Expr_:
         expr = self.parse_expression()
-        return Expr_(expr)
+        return Expr_(self.top.location, expr)
 
     def parse_declarator(self) -> Declarator:
         name = self.top.value
@@ -218,15 +218,15 @@ class Parser:
         type = self.parse_type_identifier()
         self.expect(TokenKind.Equal)
         init = self.parse_initialiser()
-        return Declarator(name, type, init)
+        return Declarator(self.top.location, name, type, init)
 
     def parse_continue_statement(self) -> Continue:
         self.expect(TokenKind.Continue)
-        return Continue()
+        return Continue(self.top.location)
 
     def parse_break_statement(self) -> Break:
         self.expect(TokenKind.Break)
-        return Break()
+        return Break(self.top.location)
 
     def parse_initialiser(self) -> Expr:
         if self.match(TokenKind.Lsqu):  # * Array initialiser
@@ -239,7 +239,7 @@ class Parser:
 
             self.expect(TokenKind.Rsqu)
 
-            return ArrayLiteral(values)
+            return ArrayLiteral(self.top.location, values)
         else:
             return self.parse_expression()
 
@@ -259,7 +259,7 @@ class Parser:
 
         self.expect(TokenKind.Equal)
         value = self.parse_assignment()
-        return Assignment(lhs, value)
+        return Assignment(self.top.location, lhs, value)
 
     def parse_conditional(self) -> Expr:
         cond = self.parse_relational()
@@ -272,7 +272,7 @@ class Parser:
         self.expect(TokenKind.Colon)
         alt = self.parse_expression()
 
-        return Selection(cond, then, alt)
+        return Selection(self.top.location, cond, then, alt)
 
     def parse_relational(self) -> Expr:
         lhs = self.parse_additive()
@@ -284,7 +284,7 @@ class Parser:
         self.advance()
         rhs = self.parse_additive()
 
-        return ComparisonOp(op, lhs, rhs)
+        return ComparisonOp(self.top.location, op, lhs, rhs)
 
     def parse_shifts(self) -> Expr:
         lhs = self.parse_additive()
@@ -293,7 +293,7 @@ class Parser:
             op = cast(Literal["<<", ">>"], self.top.value)
             self.advance()
             rhs = self.parse_additive()
-            lhs = BinaryOp(op, lhs, rhs)
+            lhs = BinaryOp(self.top.location, op, lhs, rhs)
 
         return lhs
 
@@ -304,7 +304,7 @@ class Parser:
             op = cast(Literal["+", "-"], self.top.value)
             self.advance()
             rhs = self.parse_multiplicative()
-            lhs = BinaryOp(op, lhs, rhs)
+            lhs = BinaryOp(self.top.location, op, lhs, rhs)
 
         return lhs
 
@@ -315,7 +315,7 @@ class Parser:
             op = cast(Literal["*", "/", "%"], self.top.value)
             self.advance()
             rhs = self.parse_postfix()
-            lhs = BinaryOp(op, lhs, rhs)
+            lhs = BinaryOp(self.top.location, op, lhs, rhs)
 
         return lhs
 
@@ -326,14 +326,14 @@ class Parser:
             self.advance()
             index = self.parse_expression()
             self.expect(TokenKind.Rsqu)
-            return Index(lhs, index)
+            return Index(self.top.location, lhs, index)
         elif self.match(TokenKind.Lpar):
             self.advance()
             args: list[Expr] = []
             if not self.match(TokenKind.Rpar):
                 args = self.parse_callargs()
             self.expect(TokenKind.Rpar)
-            return Call(lhs, args)
+            return Call(self.top.location, lhs, args)
         else:
             return lhs
 
@@ -341,11 +341,11 @@ class Parser:
         node: Expr
         if self.match(TokenKind.Identifier):
             assert self.top.value is not None
-            node = Variable(self.top.value)
+            node = Variable(self.top.location, self.top.value)
             self.advance()
         elif self.match(TokenKind.IntLiteral):
             assert self.top.value is not None
-            node = IntLiteral(int(self.top.value))
+            node = IntLiteral(self.top.location, int(self.top.value))
             self.advance()
         elif self.match(TokenKind.Lpar):
             self.advance()
