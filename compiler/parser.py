@@ -26,7 +26,9 @@ from .ast import (
     BinaryOp,
     Return,
     Program,
-    IfElse
+    IfElse,
+    Break,
+    Continue
 )
 
 
@@ -134,6 +136,10 @@ class Parser:
             return self.parse_return_statement()
         elif self.match(TokenKind.If):
             return self.parse_if_statement()
+        elif self.match(TokenKind.Coninute):
+            return self.parse_continue_statement()
+        elif self.match(TokenKind.Break):
+            return self.parse_break_statement()
         else:
             return self.parse_expr_statement()
 
@@ -201,6 +207,14 @@ class Parser:
         self.expect(TokenKind.Equal)
         init = self.parse_initialiser()
         return Declarator(name, type, init)
+
+    def parse_continue_statement(self) -> Continue:
+        self.expect(TokenKind.Continue)
+        return Continue()
+
+    def parse_break_statement(self) -> Break:
+        self.expect(TokenKind.Break)
+        return Break()
 
     def parse_initialiser(self) -> Expr:
         if self.match(TokenKind.Lsqu):  # * Array initialiser
