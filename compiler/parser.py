@@ -274,6 +274,17 @@ class Parser:
 
         return ComparisonOp(op, lhs, rhs)
 
+    def parse_shifts(self) -> Expr:
+        lhs = self.parse_additive()
+
+        while self.match(TokenKind.Shl, TokenKind.Shr):
+            op = cast(Literal["<<", ">>"], self.top.value)
+            self.advance()
+            rhs = self.parse_additive()
+            lhs = BinaryOp(op, lhs, rhs)
+
+        return lhs
+
     def parse_additive(self) -> Expr:
         lhs = self.parse_multiplicative()
 

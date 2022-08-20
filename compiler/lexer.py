@@ -58,6 +58,8 @@ class TokenKind(Enum):  # TODO: clean this up :)
     Exclam = 38
     Slash = 39
     Percent = 43
+    Shl = 44
+    Shr = 45
 
     Eof = 40
     Indent = 41
@@ -110,6 +112,8 @@ def tokenise(source: str, filename: str) -> Generator[Token, None, None]:
         "!": TokenKind.Exclam,
         "/": TokenKind.Slash,
         "%": TokenKind.Percent,
+        "<<": TokenKind.Shl,
+        ">>": TokenKind.Shr,
 
         "==": TokenKind.Eq,
         "!=": TokenKind.Ne,

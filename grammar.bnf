@@ -35,9 +35,12 @@ assignment     ::= conditional
                  | postfix "=" assignment
 conditional    ::= relational
                  | relational "?" expression ":" conditional
-relational     ::= additive
-                 | relational ">" additive
-                 | relational "<" additive
+relational     ::= shift
+                 | relational ">" shift
+                 | relational "<" shift
+shift          ::= additive
+                 | shift (">>" additive)*
+                 | shift ("<<" additive)*
 additive       ::= multiplicative
                  | additive ("+" multiplicative)*
                  | additive ("-" multiplicative)*

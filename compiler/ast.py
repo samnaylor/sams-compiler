@@ -53,7 +53,7 @@ class Index(Expr):
 
 @dataclass(slots=True, frozen=True)
 class BinaryOp(Expr):
-    op: Literal["+", "-", "*", "/", "%"]
+    op: Literal["+", "-", "*", "/", "%", "<<", ">>"]
     lhs: Expr
     rhs: Expr
 

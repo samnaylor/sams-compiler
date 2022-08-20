@@ -207,6 +207,9 @@ class LLVMGenerator:
             case "*": return self.builder.mul(lhs, rhs)
             case "/": return self.builder.sdiv(lhs, rhs)
             case "%": return self.builder.srem(lhs, rhs)
+
+            case "<<": return self.builder.shl(lhs, rhs)
+            case ">>": return self.builder.ashr(lhs, rhs)
             case _: raise ArithmeticError(node.op)
 
     def generate_Variable(self, node: Variable, *, flag: int = 0) -> ir.Value:
