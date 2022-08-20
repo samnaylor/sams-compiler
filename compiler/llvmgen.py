@@ -22,7 +22,9 @@ from .ast import (
     Call,
     ArrayLiteral,
     Index,
-    IfElse
+    IfElse,
+    Break,
+    Continue
 )
 
 
@@ -35,6 +37,9 @@ class LLVMGenerator:
 
         self.locals: dict[str, ir.Value] = {}
         self.functions: dict[str, ir.Function] = {}
+
+        self.block_start_stack: list[ir.Block] = []
+        self.block_end_stack: list[ir.Block] = []
 
     def _optimise(self) -> llvm.ModuleRef:
         module = llvm.parse_assembly(str(self.module))
@@ -122,6 +127,14 @@ class LLVMGenerator:
         for stmt in node.body:
             self.generate(stmt)
 
+    def generate_Break(self, node: Break, *, flag: int = 0) -> None:
+        assert self.builder is not None
+        self.builder.branch(self.block_end_stack[-1])
+
+    def generate_Continue(self, node: Continue, *, flag: int = 0) -> None:
+        assert self.builder is not None
+        self.builder.branch(self.block_start_stack[-1])
+
     def generate_Return(self, node: Return, *, flag: int = 0) -> None:
         assert self.builder is not None
 
@@ -134,6 +147,9 @@ class LLVMGenerator:
         body_block = self.builder.append_basic_block("while.body")
         post_block = self.builder.append_basic_block("while.post")
 
+        self.block_start_stack.append(cond_block)
+        self.block_end_stack.append(post_block)
+
         self.builder.branch(cond_block)
         self.builder.position_at_start(cond_block)
         cond = self.generate(node.condition, flag=1)
@@ -142,6 +158,9 @@ class LLVMGenerator:
         self.generate(node.body)
         self.builder.branch(cond_block)
         self.builder.position_at_start(post_block)
+
+        self.block_start_stack.pop()
+        self.block_end_stack.pop()
 
         # TODO: this errors if we return from within the loop
 
