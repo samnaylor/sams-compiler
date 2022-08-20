@@ -76,9 +76,12 @@ class LLVMGenerator:
 
     def generate_Program(self, node: Program, *, flag: int = 0) -> None:
         for fdef in node.function_defs:
-            self.generate(fdef)
+            self.generate(fdef, flag=flag)
 
     def generate_FunctionDefinition(self, node: FunctionDefinition, *, flag: int = 0) -> None:
+        if flag == 1 and node.function_signature.function_name == "main":
+            return
+
         self.locals = {}
 
         func = cast(ir.Function, self.generate(node.function_signature))
