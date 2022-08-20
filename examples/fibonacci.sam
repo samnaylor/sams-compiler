@@ -1,0 +1,14 @@
+fun fibonacci(start i32, limit i32) -> i32:
+    var prev i32 = start, current i32 = start, temp i32 = 0
+
+    while current < limit:
+        temp = current
+        current = current + prev
+        prev = temp
+    
+    return current
+
+fun main() -> i32:
+    var result i32 = fibonacci(1, 100)
+
+    return result
