@@ -119,6 +119,16 @@ class Block(Stmt):
 
 
 @dataclass(slots=True, frozen=True)
+class Continue(Stmt):
+    ...
+
+
+@dataclass(slots=True, frozen=True)
+class Break(Stmt):
+    ...
+
+
+@dataclass(slots=True, frozen=True)
 class FunctionParameter(Node):
     parameter_name: str
     parameter_type: TypeIdentifier
