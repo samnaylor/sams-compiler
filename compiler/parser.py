@@ -263,7 +263,7 @@ class Parser:
     def parse_additive(self) -> Expr:
         lhs = self.parse_multiplicative()
 
-        while (self.match(TokenKind.Plus) or self.match(TokenKind.Minus)):
+        while self.match(TokenKind.Plus, TokenKind.Minus):
             op = cast(Literal["+", "-"], self.top.value)
             self.advance()
             rhs = self.parse_multiplicative()
@@ -274,8 +274,8 @@ class Parser:
     def parse_multiplicative(self) -> Expr:
         lhs = self.parse_postfix()
 
-        while (self.match(TokenKind.Star)):
-            op = cast(Literal["*"], self.top.value)
+        while self.match(TokenKind.Star, TokenKind.Slash, TokenKind.Percent):
+            op = cast(Literal["*", "/", "%"], self.top.value)
             self.advance()
             rhs = self.parse_postfix()
             lhs = BinaryOp(op, lhs, rhs)
