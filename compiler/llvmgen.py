@@ -167,25 +167,17 @@ class LLVMGenerator:
     def generate_IfElse(self, node: IfElse, *, flag: int = 0) -> None:
         assert self.builder is not None
 
-        cond_block = self.builder.append_basic_block("if.cond")
-        then_block = self.builder.append_basic_block("if.then")
-        else_block = self.builder.append_basic_block("if.else")
-        post_block = self.builder.append_basic_block("if.post")
-
-        self.builder.branch(cond_block)
-        self.builder.position_at_start(cond_block)
         cond = self.generate(node.if_cond, flag=1)
-        self.builder.cbranch(cond, then_block, else_block)
-        self.builder.position_at_start(then_block)
-        self.generate(node.if_then)
-        self.builder.branch(post_block)
-        self.builder.position_at_start(else_block)
 
         if node.if_else is not None:
-            self.generate(node.if_else)
-
-        self.builder.branch(post_block)
-        self.builder.position_at_start(post_block)
+            with self.builder.if_else(cond) as (then, otherwise):
+                with then:
+                    self.generate(node.if_then)
+                with otherwise:
+                    self.generate(node.if_else)
+        else:
+            with self.builder.if_then(cond):
+                self.generate(node.if_then)
 
     def generate_Var(self, node: Var, *, flag: int = 0) -> None:
         for decl in node.declarators:
