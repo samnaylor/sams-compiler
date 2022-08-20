@@ -34,8 +34,8 @@ The following are some of the basic features we're hoping to add to the language
   - [ ] Continue and Break
 - [ ] Operators
   - [x] Comparison
-  - [ ] Division
-  - [ ] Modulo
+  - [x] Division
+  - [x] Modulo
   - [ ] Bitwise (Shifts, And, Or, Xor and unary flip?)
   - [ ] Logical (And, Or, Xor and Not)
 - [ ] New primitive data-types
