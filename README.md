@@ -54,10 +54,10 @@ The following are some of the basic features we're hoping to add to the language
     - [x] Literal
     - [ ] Casting floats-ints and ints-floats
     - [ ] Arithmetic
-    - [ ] Recommend casting
   - [ ] Strings
     - [x] Annotation
     - [x] Literal
+    - [ ] Escape characters
   - [ ] Use of pointers and references
 - [x] Extern functions
 - [ ] "Imports" or "Modules"
