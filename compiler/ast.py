@@ -68,6 +68,12 @@ class ComparisonOp(Expr):
 
 
 @dataclass(slots=True, frozen=True)
+class UnaryOp(Expr):
+    op: Literal["-"]
+    rhs: Expr
+
+
+@dataclass(slots=True, frozen=True)
 class Selection(Expr):
     condition: Expr
     if_true: Expr
