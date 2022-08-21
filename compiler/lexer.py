@@ -36,6 +36,10 @@ class TokenKind(Enum):  # TODO: clean this up :)
     Break = 17
     Import = 18
     Extern = 19
+    And = 49
+    Or = 50
+    Xor = 51
+    Not = 52
 
     Gt = 20
     Lt = 21
@@ -62,6 +66,9 @@ class TokenKind(Enum):  # TODO: clean this up :)
     Percent = 43
     Shl = 44
     Shr = 45
+    Ampersand = 46
+    Pipe = 47
+    Caret = 48
 
     Eof = 40
     Indent = 41
@@ -96,7 +103,11 @@ def tokenise(source: str, filename: str) -> Generator[Token, None, None]:
         "continue": TokenKind.Continue,
         "break": TokenKind.Break,
         "import": TokenKind.Import,
-        "extern": TokenKind.Extern
+        "extern": TokenKind.Extern,
+        "and": TokenKind.And,
+        "or": TokenKind.Or,
+        "xor": TokenKind.Xor,
+        "not": TokenKind.Not,
     }
 
     symbols = {
@@ -118,6 +129,9 @@ def tokenise(source: str, filename: str) -> Generator[Token, None, None]:
         "%": TokenKind.Percent,
         "<<": TokenKind.Shl,
         ">>": TokenKind.Shr,
+        "^": TokenKind.Caret,
+        "&": TokenKind.Ampersand,
+        "|": TokenKind.Pipe,
 
         "==": TokenKind.Eq,
         "!=": TokenKind.Ne,
