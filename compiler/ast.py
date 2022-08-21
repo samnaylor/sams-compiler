@@ -55,7 +55,7 @@ class Index(Expr):
 
 @dataclass(slots=True, frozen=True)
 class BinaryOp(Expr):
-    op: Literal["+", "-", "*", "/", "%", "<<", ">>"]
+    op: Literal["+", "-", "*", "/", "%", "<<", ">>", "^", "|", "&", "and", "xor", "or"]
     lhs: Expr
     rhs: Expr
 
@@ -69,7 +69,7 @@ class ComparisonOp(Expr):
 
 @dataclass(slots=True, frozen=True)
 class UnaryOp(Expr):
-    op: Literal["-"]
+    op: Literal["-", "not"]
     rhs: Expr
 
 
