@@ -289,7 +289,7 @@ class Parser:
         return Assignment(lhs.location, lhs, value)
 
     def parse_conditional(self) -> Expr:
-        cond = self.parse_relational()
+        cond = self.parse_logical_or()
 
         if not self.match(TokenKind.Question):
             return cond
@@ -342,14 +342,14 @@ class Parser:
         return self.parse_relational()
 
     def parse_relational(self) -> Expr:
-        lhs = self.parse_additive()
+        lhs = self.parse_bitwise_or()
 
         if not self.match(TokenKind.Eq, TokenKind.Ne, TokenKind.Ge, TokenKind.Le, TokenKind.Gt, TokenKind.Lt):
             return lhs
 
         op = cast(Literal["==", "!=", ">=", "<=", "<", ">"], self.top.value)
         self.advance()
-        rhs = self.parse_additive()
+        rhs = self.parse_bitwise_or()
 
         return ComparisonOp(lhs.location, op, lhs, rhs)
 
