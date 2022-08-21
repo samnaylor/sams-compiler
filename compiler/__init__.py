@@ -22,7 +22,7 @@ def compile(filename: str) -> int:
     llvm.initialize_native_target()
     llvm.initialize_all_asmprinters()
 
-    codegen = LLVMGenerator(filename)
+    codegen = LLVMGenerator(filename, path)
     codegen.generate(tree)
 
     with open(f"{path.stem}.ll", "w") as f:

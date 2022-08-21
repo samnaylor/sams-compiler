@@ -32,9 +32,10 @@ class TokenKind(Enum):  # TODO: clean this up :)
     Return = 13
     If = 14
     Else = 15
-    Coninute = 16
+    Continue = 16
     Break = 17
     Import = 18
+    Extern = 19
 
     Gt = 20
     Lt = 21
@@ -92,9 +93,10 @@ def tokenise(source: str, filename: str) -> Generator[Token, None, None]:
         "return": TokenKind.Return,
         "if": TokenKind.If,
         "else": TokenKind.Else,
-        "continue": TokenKind.Coninute,
+        "continue": TokenKind.Continue,
         "break": TokenKind.Break,
-        "import": TokenKind.Import
+        "import": TokenKind.Import,
+        "extern": TokenKind.Extern
     }
 
     symbols = {
