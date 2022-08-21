@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 
 from .lexer import Location
 
+
 @dataclass(slots=True, frozen=True)
 class Node:
     " Base Node for all node types "
@@ -148,6 +149,11 @@ class FunctionSignature(Node):
 
 
 @dataclass(slots=True, frozen=True)
+class Extern(Node):
+    function_signature: FunctionSignature
+
+
+@dataclass(slots=True, frozen=True)
 class FunctionDefinition(Node):
     function_signature: FunctionSignature
     function_body: Stmt
@@ -157,3 +163,4 @@ class FunctionDefinition(Node):
 class Program(Node):
     imports: list[Import]
     function_defs: list[FunctionDefinition]
+    externs: list[Extern]
