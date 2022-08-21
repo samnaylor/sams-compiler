@@ -38,16 +38,16 @@ The following are some of the basic features we're hoping to add to the language
   - [x] Modulo
   - [x] Unary
     - [x] Negative
-  - [ ] Bitwise
+  - [x] Bitwise
     - [x] Shifts
-    - [ ] And
-    - [ ] Xor
-    - [ ] Or
-  - [ ] Logical
-    - [ ] Not
-    - [ ] And
-    - [ ] Xor
-    - [ ] Or
+    - [x] And
+    - [x] Xor
+    - [x] Or
+  - [x] Logical
+    - [x] Not
+    - [x] And
+    - [x] Xor
+    - [x] Or
 - [ ] New primitive data-types
   - [ ] Floating points (doubles)
     - [ ] Casting floats-ints and ints-floats

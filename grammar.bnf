@@ -35,11 +35,25 @@ initialiser ::= expression
 expression     ::= assignment
 assignment     ::= conditional
                  | postfix "=" assignment
-conditional    ::= relational
-                 | relational "?" expression ":" conditional
+conditional    ::= logicalor
+                 | logicalor "?" expression ":" conditional
+logicalor      ::= logicalxor
+                 | logicalor ("or" logicalxor)*
+logicalxor     ::= logicaland
+                 | logicalxor ("xor" logicaland)*
+logicaland     ::= logicalnot
+                 | logicaland ("and" logicalnot)*
+logicalnot     ::= relational
+                 | "not" logicalnot
 relational     ::= shift
                  | relational ">" shift
                  | relational "<" shift
+bitwiseor      ::= bitwisexor
+                 | bitwiseor ("|" bitwisexor)*
+bitwisexor     ::= bitwiseand
+                 | bitwisexor ("^" bitwiseand)*
+bitwiseand     ::= shift
+                 | bitwiseand ("&" bitwisenot)*
 shift          ::= additive
                  | shift (">>" additive)*
                  | shift ("<<" additive)*

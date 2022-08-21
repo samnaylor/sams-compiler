@@ -302,16 +302,44 @@ class Parser:
         return Selection(cond.location, cond, then, alt)
 
     def parse_logical_or(self) -> Expr:
-        ...
+        lhs = self.parse_logical_xor()
+
+        while self.match(TokenKind.Or):
+            op = cast(Literal["or"], self.top.value)
+            self.advance()
+            rhs = self.parse_logical_xor()
+            lhs = BinaryOp(lhs.location, op, lhs, rhs)
+
+        return lhs
 
     def parse_logical_xor(self) -> Expr:
-        ...
+        lhs = self.parse_logical_and()
+
+        while self.match(TokenKind.Xor):
+            op = cast(Literal["xor"], self.top.value)
+            self.advance()
+            rhs = self.parse_logical_and()
+            lhs = BinaryOp(lhs.location, op, lhs, rhs)
+
+        return lhs
 
     def parse_logical_and(self) -> Expr:
-        ...
+        lhs = self.parse_logical_not()
+
+        while self.match(TokenKind.And):
+            op = cast(Literal["and"], self.top.value)
+            self.advance()
+            rhs = self.parse_logical_not()
+            lhs = BinaryOp(lhs.location, op, lhs, rhs)
+
+        return lhs
 
     def parse_logical_not(self) -> Expr:
-        ...
+        location = self.top.location
+        if self.match(TokenKind.Not):
+            return UnaryOp(location, "not", self.parse_logical_not())
+
+        return self.parse_relational()
 
     def parse_relational(self) -> Expr:
         lhs = self.parse_additive()
@@ -326,13 +354,37 @@ class Parser:
         return ComparisonOp(lhs.location, op, lhs, rhs)
 
     def parse_bitwise_or(self) -> Expr:
-        ...
+        lhs = self.parse_bitwise_xor()
+
+        while self.match(TokenKind.Pipe):
+            op = cast(Literal["|"], self.top.value)
+            self.advance()
+            rhs = self.parse_bitwise_xor()
+            lhs = BinaryOp(lhs.location, op, lhs, rhs)
+
+        return lhs
 
     def parse_bitwise_xor(self) -> Expr:
-        ...
+        lhs = self.parse_bitwise_and()
+
+        while self.match(TokenKind.Caret):
+            op = cast(Literal["^"], self.top.value)
+            self.advance()
+            rhs = self.parse_bitwise_and()
+            lhs = BinaryOp(lhs.location, op, lhs, rhs)
+
+        return lhs
 
     def parse_bitwise_and(self) -> Expr:
-        ...
+        lhs = self.parse_shifts()
+
+        while self.match(TokenKind.Ampersand):
+            op = cast(Literal["&"], self.top.value)
+            self.advance()
+            rhs = self.parse_shifts()
+            lhs = BinaryOp(lhs.location, op, lhs, rhs)
+
+        return lhs
 
     def parse_shifts(self) -> Expr:
         lhs = self.parse_additive()
