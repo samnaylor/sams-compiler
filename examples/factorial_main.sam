@@ -1,11 +1,11 @@
 import factorial
 
-extern putc(c i32) -> i32
+extern putchar(c i32) -> i32
 
 fun print_int(x i32) -> i32:
     if x != 0:
         print_int(x / 10)
-        putc((x % 10) + 48)
+        putchar((x % 10) + 48)
 
     return 0
 
@@ -17,5 +17,6 @@ fun main() -> i32:
         i = i + 1
 
     print_int(factorial(5))
+    putchar(10)
 
     return result
