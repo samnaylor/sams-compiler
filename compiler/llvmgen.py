@@ -251,6 +251,22 @@ class LLVMGenerator:
 
             case "<<": return self.builder.shl(lhs, rhs)
             case ">>": return self.builder.ashr(lhs, rhs)
+
+            case "&": return self.builder.and_(lhs, rhs)
+            case "^": return self.builder.xor(lhs, rhs)
+            case "|": return self.builder.or_(lhs, rhs)
+
+            # ? Do these work... or do we need another way of checking the "truthy-ness" of these values
+
+            case "and":
+                return self.builder.icmp_signed("!=", self.builder.and_(lhs, rhs), ir.IntType(32)(0))
+
+            case "xor":
+                return self.builder.icmp_signed("!=", self.builder.xor(lhs, rhs), ir.IntType(32)(0))
+
+            case "or":
+                return self.builder.icmp_signed("!=", self.builder.or_(lhs, rhs), ir.IntType(32)(0))
+
             case _: llvm_generator_error(self.filename, node.location, f"Unsupported operator `{node.op}`")
 
     def generate_UnaryOp(self, node: UnaryOp, *, flag: int = 0) -> ir.Value:
@@ -260,6 +276,10 @@ class LLVMGenerator:
 
         match node.op:
             case "-": return self.builder.neg(rhs)
+
+            # ? Same question as logical operators in the binary op section...
+
+            case "not": return self.builder.icmp_signed("!=", rhs, ir.IntType(32)(0))
             case _: llvm_generator_error(self.filename, node.location, f"Unsupported operator `{node.op}`")
 
     def generate_Variable(self, node: Variable, *, flag: int = 0) -> ir.Value:
