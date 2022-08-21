@@ -4,6 +4,7 @@ from typing import cast
 from llvmlite import ir, binding as llvm
 
 from .ast import (
+    Extern,
     Node,
     Program,
     FunctionDefinition,
@@ -102,6 +103,9 @@ class LLVMGenerator:
             tree = Parser(f.read(), node.module_name).parse()
 
         self.generate(tree, flag=1)
+
+    def generate_Extern(self, node: Extern, *, flag: int = 0) -> None:
+        ...
 
     def generate_FunctionDefinition(self, node: FunctionDefinition, *, flag: int = 0) -> None:
         if flag == 1 and node.function_signature.function_name == "main":
