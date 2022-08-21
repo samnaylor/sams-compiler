@@ -87,6 +87,9 @@ class LLVMGenerator:
         for imp in node.imports:
             self.generate(imp)
 
+        for ext in node.externs:
+            self.generate(ext)
+
         for fdef in node.function_defs:
             self.generate(fdef, flag=flag)
 
@@ -105,7 +108,7 @@ class LLVMGenerator:
         self.generate(tree, flag=1)
 
     def generate_Extern(self, node: Extern, *, flag: int = 0) -> None:
-        ...
+        self.generate(node.function_signature)
 
     def generate_FunctionDefinition(self, node: FunctionDefinition, *, flag: int = 0) -> None:
         if flag == 1 and node.function_signature.function_name == "main":
