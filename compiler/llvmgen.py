@@ -28,16 +28,22 @@ from .ast import (
     IfElse,
     Break,
     Continue,
-    Import
+    Import,
+    UnaryOp,
 )
 
+from .lexer import generic_error, Location
 from .parser import Parser
+
+
+def llvm_generator_error(filename: str, location: Location, message: str) -> None:
+    generic_error("LLVM Generation Error", filename, location, message)
 
 
 class LLVMGenerator:
     def __init__(self, filename: str, callpath: Path):
         self.module = ir.Module()
-        self.module.name = filename
+        self.filename = self.module.name = filename
         self.callpath = callpath
 
         self.builder: ir.IRBuilder | None = None
@@ -52,7 +58,7 @@ class LLVMGenerator:
 
     def _optimise(self) -> llvm.ModuleRef:
         module = llvm.parse_assembly(str(self.module))
-        module.name = module.name
+        module.name = self.module.name
         module.triple = llvm.Target.from_default_triple().triple
 
         pmb = llvm.create_pass_manager_builder()
@@ -230,7 +236,7 @@ class LLVMGenerator:
     def generate_Expr_(self, node: Expr_, *, flag: int = 0) -> None:
         self.generate(node.expression)
 
-    def generate_BinaryOp(self, node: BinaryOp, *, flag: int = 0) -> None:
+    def generate_BinaryOp(self, node: BinaryOp, *, flag: int = 0) -> ir.Value:
         assert self.builder is not None
 
         lhs = self.generate(node.lhs, flag=1)
@@ -245,7 +251,16 @@ class LLVMGenerator:
 
             case "<<": return self.builder.shl(lhs, rhs)
             case ">>": return self.builder.ashr(lhs, rhs)
-            case _: raise ArithmeticError(node.op)
+            case _: llvm_generator_error(self.filename, node.location, f"Unsupported operator `{node.op}`")
+
+    def generate_UnaryOp(self, node: UnaryOp, *, flag: int = 0) -> ir.Value:
+        assert self.builder is not None
+
+        rhs = self.generate(node.rhs, flag=1)
+
+        match node.op:
+            case "-": return self.builder.neg(rhs)
+            case _: llvm_generator_error(self.filename, node.location, f"Unsupported operator `{node.op}`")
 
     def generate_Variable(self, node: Variable, *, flag: int = 0) -> ir.Value:
         assert self.builder is not None

@@ -46,8 +46,10 @@ shift          ::= additive
 additive       ::= multiplicative
                  | additive ("+" multiplicative)*
                  | additive ("-" multiplicative)*
-multiplicative ::= postfix
-                 | multiplicative ("*" postfix)*
+multiplicative ::= unary
+                 | multiplicative ("*" unary)*
+unary          ::= postfix
+                 | "-" unary
 postfix        ::= primary
                  | postfix "[" expression "]"
                  | postfix "(" [callargs] ")"

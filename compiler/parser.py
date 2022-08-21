@@ -30,7 +30,8 @@ from .ast import (
     Break,
     Continue,
     Import,
-    Extern
+    Extern,
+    UnaryOp
 )
 
 
@@ -335,15 +336,23 @@ class Parser:
         return lhs
 
     def parse_multiplicative(self) -> Expr:
-        lhs = self.parse_postfix()
+        lhs = self.parse_unary()
 
         while self.match(TokenKind.Star, TokenKind.Slash, TokenKind.Percent):
             op = cast(Literal["*", "/", "%"], self.top.value)
             self.advance()
-            rhs = self.parse_postfix()
+            rhs = self.parse_unary()
             lhs = BinaryOp(lhs.location, op, lhs, rhs)
 
         return lhs
+
+    def parse_unary(self) -> Expr:
+        location = self.top.location
+        if self.match(TokenKind.Minus):
+            self.advance()
+            return UnaryOp(location, "-", self.parse_unary())
+
+        return self.parse_postfix()
 
     def parse_postfix(self) -> Expr:
         lhs = self.parse_primary()
