@@ -1,3 +1,5 @@
+import os
+from pathlib import Path
 from typing import cast
 from llvmlite import ir, binding as llvm
 
@@ -32,9 +34,10 @@ from .parser import Parser
 
 
 class LLVMGenerator:
-    def __init__(self, filename: str):
+    def __init__(self, filename: str, callpath: Path):
         self.module = ir.Module()
         self.module.name = filename
+        self.callpath = callpath
 
         self.builder: ir.IRBuilder | None = None
 
@@ -43,6 +46,8 @@ class LLVMGenerator:
 
         self.block_start_stack: list[ir.Block] = []
         self.block_end_stack: list[ir.Block] = []
+
+        self.dependencies: set[str] = {}
 
     def _optimise(self) -> llvm.ModuleRef:
         module = llvm.parse_assembly(str(self.module))
@@ -85,7 +90,15 @@ class LLVMGenerator:
             self.generate(fdef, flag=flag)
 
     def generate_Import(self, node: Import, *, flag: int = 0) -> None:
-        with open(f"{node.module_name}.sam", "r") as f:
+        # TODO: This might need cleaning up, just wasn't sure of how else to do this.
+        if node.module_name in self.dependencies:
+            return
+
+        self.dependencies.add(node.module_name)
+
+        path = os.path.join(Path().root, *self.callpath.absolute().parts[:-1], f"{node.module_name}.sam")
+
+        with open(path, "r") as f:
             tree = Parser(f.read(), node.module_name).parse()
 
         self.generate(tree, flag=1)
