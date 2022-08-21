@@ -62,8 +62,10 @@ class Parser:
 
     def parse(self) -> Node:
         imports: list[Import] = []
-        function_defs: list[FunctionDefinition] = []
         externs: list[Extern] = []
+        function_defs: list[FunctionDefinition] = []
+
+        location = self.top.location
 
         while not self.match(TokenKind.Eof):
             if self.match(TokenKind.Fun):
@@ -73,14 +75,15 @@ class Parser:
             elif self.match(TokenKind.Extern):
                 externs.append(self.parse_extern())
 
-        return Program(self.top.location, imports, externs, function_defs)
+        return Program(location, imports, externs, function_defs)
 
     def parse_import(self) -> Import:
+        location = self.top.location
         self.expect(TokenKind.Import)
         mod_name = self.top.value
         assert mod_name is not None
         self.advance()
-        return Import(self.top.location, mod_name)
+        return Import(location, mod_name)
 
     def parse_extern(self) -> Extern:
         location = self.top.location
@@ -89,13 +92,15 @@ class Parser:
         return Extern(location, signature)
 
     def parse_function_definition(self) -> FunctionDefinition:
+        location = self.top.location
         self.expect(TokenKind.Fun)
         signature = self.parse_function_signature()
         self.expect(TokenKind.Colon)
         body = self.parse_statement()
-        return FunctionDefinition(self.top.location, signature, body)
+        return FunctionDefinition(location, signature, body)
 
     def parse_function_signature(self) -> FunctionSignature:
+        location = self.top.location
         name = self.top.value
         assert name is not None
         self.advance()
@@ -110,7 +115,7 @@ class Parser:
 
         retty = self.parse_type_identifier()
 
-        return FunctionSignature(self.top.location, name, parameters, retty)
+        return FunctionSignature(location, name, parameters, retty)
 
     def parse_function_parameters(self) -> list[FunctionParameter]:
         parameters: list[FunctionParameter] = []
@@ -123,16 +128,18 @@ class Parser:
         return parameters
 
     def parse_function_parameter(self) -> FunctionParameter:
+        location = self.top.location
         name = self.top.value  # TODO: Do we need to match here... for extra safety
         assert name is not None
         self.advance()
         type = self.parse_type_identifier()
-        return FunctionParameter(self.top.location, name, type)
+        return FunctionParameter(location, name, type)
 
     def parse_type_identifier(self) -> TypeIdentifier:
+        location = self.top.location
         if self.match(TokenKind.Identifier, value="i32"):
             self.advance()
-            return TypeIdentifier(self.top.location, "i32")
+            return TypeIdentifier(location, "i32")
         elif self.match(TokenKind.Lsqu):
             self.advance()
             type = self.parse_type_identifier()
@@ -142,9 +149,9 @@ class Parser:
             assert size is not None and size.isdigit()
             self.advance()
             self.expect(TokenKind.Rsqu)
-            return TypeIdentifier(self.top.location, type.typename, True, int(size))
+            return TypeIdentifier(location, type.typename, True, int(size))
         else:
-            parser_error(self.filename, self.top.location, f"Unexpected `{self.top.value}` in parse_type_identifier")
+            parser_error(self.filename, location, f"Unexpected `{self.top.value}` in parse_type_identifier")
 
     def parse_statement(self) -> Stmt:
         # TODO: The logic here doesn't quite fit. a block isn't just indented code. it must follow something. See Python lark or snail_lang parser
@@ -166,6 +173,7 @@ class Parser:
             return self.parse_expr_statement()
 
     def parse_block_statement(self) -> Block:
+        location = self.top.location
         children: list[Stmt] = []
         self.expect(TokenKind.Indent)
 
@@ -173,14 +181,15 @@ class Parser:
             children.append(self.parse_statement())
 
         self.expect(TokenKind.Dedent)
-        return Block(self.top.location, children)
+        return Block(location, children)
 
     def parse_var_statement(self) -> Var:
+        location = self.top.location
         self.expect(TokenKind.Var)
         declarators: list[Declarator] = []
 
         if not self.match(TokenKind.Identifier):
-            parser_error(self.filename, self.top.location, "Var statement expects at least 1 declarator!")
+            parser_error(self.filename, location, "Var statement expects at least 1 declarator!")
 
         declarators.append(self.parse_declarator())
 
@@ -188,57 +197,65 @@ class Parser:
             self.advance()
             declarators.append(self.parse_declarator())
 
-        return Var(self.top.location, declarators)
+        return Var(location, declarators)
 
     def parse_while_statement(self) -> While:
+        location = self.top.location
         self.expect(TokenKind.While)
         cond = self.parse_expression()
         self.expect(TokenKind.Colon)
         body = self.parse_statement()
 
-        return While(self.top.location, cond, body)
+        return While(location, cond, body)
 
     def parse_return_statement(self) -> Return:
+        location = self.top.location
         self.expect(TokenKind.Return)
         value = self.parse_expression()
-        return Return(self.top.location, value)
+        return Return(location, value)
 
     def parse_if_statement(self) -> IfElse:
+        location = self.top.location
         self.expect(TokenKind.If)
         if_cond = self.parse_expression()
         self.expect(TokenKind.Colon)
         if_then = self.parse_statement()
 
         if not self.match(TokenKind.Else):
-            return IfElse(self.top.location, if_cond, if_then, None)
+            return IfElse(location, if_cond, if_then, None)
 
         self.expect(TokenKind.Else)
         self.expect(TokenKind.Colon)
         if_else = self.parse_statement()
-        return IfElse(self.top.location, if_cond, if_then, if_else)
+        return IfElse(location, if_cond, if_then, if_else)
 
     def parse_expr_statement(self) -> Expr_:
+        location = self.top.location
         expr = self.parse_expression()
-        return Expr_(self.top.location, expr)
+        return Expr_(location, expr)
 
     def parse_declarator(self) -> Declarator:
+        location = self.top.location
         name = self.top.value
         assert name is not None
         self.advance()
         type = self.parse_type_identifier()
         self.expect(TokenKind.Equal)
         init = self.parse_initialiser()
-        return Declarator(self.top.location, name, type, init)
+        return Declarator(location, name, type, init)
 
     def parse_continue_statement(self) -> Continue:
+        location = self.top.location
         self.expect(TokenKind.Continue)
-        return Continue(self.top.location)
+        return Continue(location)
 
     def parse_break_statement(self) -> Break:
+        location = self.top.location
         self.expect(TokenKind.Break)
-        return Break(self.top.location)
+        return Break(location)
 
     def parse_initialiser(self) -> Expr:
+        location = self.top.location
         if self.match(TokenKind.Lsqu):  # * Array initialiser
             self.advance()
             values: list[Expr] = []
@@ -249,7 +266,7 @@ class Parser:
 
             self.expect(TokenKind.Rsqu)
 
-            return ArrayLiteral(self.top.location, values)
+            return ArrayLiteral(location, values)
         else:
             return self.parse_expression()
 
@@ -257,7 +274,6 @@ class Parser:
         return self.parse_assignment()
 
     def parse_assignment(self) -> Expr:
-        loc = self.top.location
         lhs = self.parse_conditional()
 
         if not self.match(TokenKind.Equal):
@@ -265,11 +281,11 @@ class Parser:
 
         if not isinstance(lhs, (Variable, Index)):
             # TODO: This location will be wrong... needs to be the lhs location
-            parser_error(self.filename, loc, f"lvalue must be assignable, {lhs.__class__.__name__} is not!")
+            parser_error(self.filename, lhs.location, f"lvalue must be assignable, {lhs.__class__.__name__} is not!")
 
         self.expect(TokenKind.Equal)
         value = self.parse_assignment()
-        return Assignment(self.top.location, lhs, value)
+        return Assignment(lhs.location, lhs, value)
 
     def parse_conditional(self) -> Expr:
         cond = self.parse_relational()
@@ -282,7 +298,7 @@ class Parser:
         self.expect(TokenKind.Colon)
         alt = self.parse_expression()
 
-        return Selection(self.top.location, cond, then, alt)
+        return Selection(cond.location, cond, then, alt)
 
     def parse_relational(self) -> Expr:
         lhs = self.parse_additive()
@@ -294,7 +310,7 @@ class Parser:
         self.advance()
         rhs = self.parse_additive()
 
-        return ComparisonOp(self.top.location, op, lhs, rhs)
+        return ComparisonOp(lhs.location, op, lhs, rhs)
 
     def parse_shifts(self) -> Expr:
         lhs = self.parse_additive()
@@ -303,7 +319,7 @@ class Parser:
             op = cast(Literal["<<", ">>"], self.top.value)
             self.advance()
             rhs = self.parse_additive()
-            lhs = BinaryOp(self.top.location, op, lhs, rhs)
+            lhs = BinaryOp(lhs.location, op, lhs, rhs)
 
         return lhs
 
@@ -314,7 +330,7 @@ class Parser:
             op = cast(Literal["+", "-"], self.top.value)
             self.advance()
             rhs = self.parse_multiplicative()
-            lhs = BinaryOp(self.top.location, op, lhs, rhs)
+            lhs = BinaryOp(lhs.location, op, lhs, rhs)
 
         return lhs
 
@@ -325,7 +341,7 @@ class Parser:
             op = cast(Literal["*", "/", "%"], self.top.value)
             self.advance()
             rhs = self.parse_postfix()
-            lhs = BinaryOp(self.top.location, op, lhs, rhs)
+            lhs = BinaryOp(lhs.location, op, lhs, rhs)
 
         return lhs
 
@@ -336,33 +352,34 @@ class Parser:
             self.advance()
             index = self.parse_expression()
             self.expect(TokenKind.Rsqu)
-            return Index(self.top.location, lhs, index)
+            return Index(lhs.location, lhs, index)
         elif self.match(TokenKind.Lpar):
             self.advance()
             args: list[Expr] = []
             if not self.match(TokenKind.Rpar):
                 args = self.parse_callargs()
             self.expect(TokenKind.Rpar)
-            return Call(self.top.location, lhs, args)
+            return Call(lhs.location, lhs, args)
         else:
             return lhs
 
     def parse_primary(self) -> Expr:
         node: Expr
+        location = self.top.location
         if self.match(TokenKind.Identifier):
             assert self.top.value is not None
-            node = Variable(self.top.location, self.top.value)
+            node = Variable(location, self.top.value)
             self.advance()
         elif self.match(TokenKind.IntLiteral):
             assert self.top.value is not None
-            node = IntLiteral(self.top.location, int(self.top.value))
+            node = IntLiteral(location, int(self.top.value))
             self.advance()
         elif self.match(TokenKind.Lpar):
             self.advance()
             node = self.parse_expression()
             self.expect(TokenKind.Rpar)
         else:
-            parser_error(self.filename, self.top.location, f"Unexpected {self.top.value}")
+            parser_error(self.filename, location, f"Unexpected {self.top.value}")
 
         return node
 
