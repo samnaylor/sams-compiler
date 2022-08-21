@@ -162,5 +162,5 @@ class FunctionDefinition(Node):
 @dataclass(slots=True, frozen=True)
 class Program(Node):
     imports: list[Import]
-    function_defs: list[FunctionDefinition]
     externs: list[Extern]
+    function_defs: list[FunctionDefinition]

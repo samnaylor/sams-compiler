@@ -73,7 +73,7 @@ class Parser:
             elif self.match(TokenKind.Extern):
                 externs.append(self.parse_extern())
 
-        return Program(self.top.location, imports, function_defs, externs)
+        return Program(self.top.location, imports, externs, function_defs)
 
     def parse_import(self) -> Import:
         self.expect(TokenKind.Import)
