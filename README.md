@@ -30,14 +30,14 @@ The following are some of the basic features we're hoping to add to the language
 
 - [ ] New statement constructs
   - [x] If-Else statements
-  - [ ] Do-While (maybe, if nice syntax can be found)
   - [x] Continue and Break
+  - [ ] Do-While (maybe, if nice syntax can be found)
 - [ ] Operators
   - [x] Comparison
   - [x] Division
   - [x] Modulo
-  - [ ] Unary
-    - [ ] Negative
+  - [x] Unary
+    - [x] Negative
   - [ ] Bitwise
     - [x] Shifts
     - [ ] And
