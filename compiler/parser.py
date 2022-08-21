@@ -301,6 +301,18 @@ class Parser:
 
         return Selection(cond.location, cond, then, alt)
 
+    def parse_logical_or(self) -> Expr:
+        ...
+
+    def parse_logical_xor(self) -> Expr:
+        ...
+
+    def parse_logical_and(self) -> Expr:
+        ...
+
+    def parse_logical_not(self) -> Expr:
+        ...
+
     def parse_relational(self) -> Expr:
         lhs = self.parse_additive()
 
@@ -312,6 +324,15 @@ class Parser:
         rhs = self.parse_additive()
 
         return ComparisonOp(lhs.location, op, lhs, rhs)
+
+    def parse_bitwise_or(self) -> Expr:
+        ...
+
+    def parse_bitwise_xor(self) -> Expr:
+        ...
+
+    def parse_bitwise_and(self) -> Expr:
+        ...
 
     def parse_shifts(self) -> Expr:
         lhs = self.parse_additive()
