@@ -31,7 +31,9 @@ from .ast import (
     Continue,
     Import,
     Extern,
-    UnaryOp
+    UnaryOp,
+    FloatLiteral,
+    StringLiteral
 )
 
 
@@ -141,6 +143,12 @@ class Parser:
         if self.match(TokenKind.Identifier, value="i32"):
             self.advance()
             return TypeIdentifier(location, "i32")
+        elif self.match(TokenKind.Identifier, value="f32"):
+            self.advance()
+            return TypeIdentifier(location, "f32")
+        elif self.match(TokenKind.Identifier, "string"):
+            self.advance()
+            return TypeIdentifier(location, "string")
         elif self.match(TokenKind.Lsqu):
             self.advance()
             type = self.parse_type_identifier()
@@ -456,6 +464,14 @@ class Parser:
             assert self.top.value is not None
             node = IntLiteral(location, int(self.top.value))
             self.advance()
+        elif self.match(TokenKind.StringLiteral):
+            assert self.top.value is not None
+            node = StringLiteral(location, self.top.value[1:-1])
+            self.advance()
+        elif self.match(TokenKind.FloatLiteral):
+            assert self.top.value is not None
+            node = FloatLiteral(location, float(self.top.value))
+            self.advance()
         elif self.match(TokenKind.Lpar):
             self.advance()
             node = self.parse_expression()
@@ -464,9 +480,6 @@ class Parser:
             parser_error(self.filename, location, f"Unexpected {self.top.value}")
 
         return node
-
-    # def parse_constant(self) -> Expr:
-    #     raise NotImplementedError
 
     def parse_callargs(self) -> list[Expr]:
         args: list[Expr] = []

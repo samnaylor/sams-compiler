@@ -25,6 +25,8 @@ def generic_error(errtype: str, filename: str, location: Location, message: str)
 class TokenKind(Enum):  # TODO: clean this up :)
     IntLiteral = 0
     Identifier = 1
+    FloatLiteral = 2
+    StringLiteral = 3
 
     Fun = 10
     Var = 11
@@ -182,14 +184,21 @@ def tokenise(source: str, filename: str) -> Generator[Token, None, None]:
 
             yield Token(keywords.get(identifier, TokenKind.Identifier), identifier, Location(line, column - len(identifier)))
 
-        elif source[index] in digits:
+        elif source[index] in (digits + "."):
             number = source[index]
             column += 1
-            while ((index := index + 1) < len(source)) and (source[index] in digits + "_"):
+            while ((index := index + 1) < len(source)) and (source[index] in digits + "_" + "."):
                 number += source[index]
                 column += 1
 
-            yield Token(TokenKind.IntLiteral, number, Location(line, column - len(number)))
+            if (count := number.count(".")) > 1:
+                tokeniser_error(filename, Location(line, column - len(number)), f"Floating point number can only have 1 decimal, place found {count}")
+
+            yield Token(
+                TokenKind.IntLiteral if "." not in number else TokenKind.FloatLiteral,
+                number.replace("_", ""),
+                Location(line, column - len(number))
+            )
 
         elif source[index] in symbols.keys():
             symbol = source[index]
@@ -199,6 +208,22 @@ def tokenise(source: str, filename: str) -> Generator[Token, None, None]:
                 column += 1
 
             yield Token(symbols[symbol], symbol, Location(line, column - len(symbol)))
+
+        elif source[index] == '"':
+            string = source[index]
+            column += 1
+            while ((index := index + 1) < len(source)) and source[index] != '"':
+                string += source[index]
+                column += 1
+
+            if (index >= len(source)) or (source[index] != '"'):
+                tokeniser_error(filename, Location(line, column), "Un-closed string literal")
+
+            string += source[index]
+            column += 1
+            index += 1
+
+            yield Token(TokenKind.StringLiteral, string, Location(line, column - len(symbol)))
 
         elif source[index] == " ":
             index += 1

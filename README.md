@@ -50,10 +50,14 @@ The following are some of the basic features we're hoping to add to the language
     - [x] Or
 - [ ] New primitive data-types
   - [ ] Floating points (doubles)
+    - [x] Annotation
+    - [x] Literal
     - [ ] Casting floats-ints and ints-floats
     - [ ] Arithmetic
     - [ ] Recommend casting
   - [ ] Strings
+    - [x] Annotation
+    - [x] Literal
   - [ ] Use of pointers and references
 - [x] Extern functions
 - [ ] "Imports" or "Modules"

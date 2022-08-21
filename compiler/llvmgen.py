@@ -1,7 +1,10 @@
 import os
+
 from pathlib import Path
 from typing import cast
+
 from llvmlite import ir, binding as llvm
+from llvmlite.llvmpy.core import Constant
 
 from .ast import (
     Extern,
@@ -30,6 +33,8 @@ from .ast import (
     Continue,
     Import,
     UnaryOp,
+    FloatLiteral,
+    StringLiteral
 )
 
 from .lexer import generic_error, Location
@@ -55,6 +60,13 @@ class LLVMGenerator:
         self.block_end_stack: list[ir.Block] = []
 
         self.dependencies: set[str] = set[str]()
+
+        self._strcount = -1
+
+    @property
+    def strcount(self) -> int:
+        self._strcount += 1
+        return self._strcount
 
     def _optimise(self) -> llvm.ModuleRef:
         module = llvm.parse_assembly(str(self.module))
@@ -158,6 +170,12 @@ class LLVMGenerator:
 
         if node.typename == "i32":
             base = ir.IntType(32)
+
+        elif node.typename == "string":
+            base = ir.IntType(8).as_pointer()
+
+        elif node.typename == "f32":
+            base = ir.FloatType()
 
         if node.is_array:
             base = ir.ArrayType(base, node.array_sz)
@@ -340,6 +358,16 @@ class LLVMGenerator:
 
     def generate_IntLiteral(self, node: IntLiteral, *, flag: int = 0) -> ir.Value:
         return ir.IntType(32)(node.int_value)
+
+    def generate_FloatLiteral(self, node: FloatLiteral, *, flag: int = 0) -> ir.Value:
+        return ir.FloatType()(node.float_value)
+
+    def generate_StringLiteral(self, node: StringLiteral, *, flag: int = 0) -> ir.Value:
+        assert self.builder is not None
+        # TODO: This method is deprecated :( do the new way
+        glob = ir.GlobalVariable(self.module, ir.ArrayType(ir.IntType(8), len(node.string_value) + 1), f".str{self.strcount}")
+        glob.initializer = Constant.stringz(node.string_value)
+        return self.builder.gep(glob, (ir.IntType(32)(0), ir.IntType(32)(0)))
 
     def generate_Call(self, node: Call, *, flag: int = 0) -> ir.Value:
         assert self.builder is not None

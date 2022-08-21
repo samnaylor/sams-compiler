@@ -4,6 +4,9 @@ from dataclasses import dataclass, field
 from .lexer import Location
 
 
+# TODO: __all__
+
+
 @dataclass(slots=True, frozen=True)
 class Node:
     " Base Node for all node types "
@@ -28,6 +31,16 @@ class TypeIdentifier(Node):
 @dataclass(slots=True, frozen=True)
 class IntLiteral(Expr):
     int_value: int
+
+
+@dataclass(slots=True, frozen=True)
+class FloatLiteral(Expr):
+    float_value: float
+
+
+@dataclass(slots=True, frozen=True)
+class StringLiteral(Expr):
+    string_value: str
 
 
 @dataclass(slots=True, frozen=True)

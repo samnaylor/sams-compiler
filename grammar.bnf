@@ -70,6 +70,6 @@ postfix        ::= primary
 primary        ::= identifier
                  | constant
                  | "(" expression ")"
-constant       ::= INTEGER
+constant       ::= INTEGER | FLOAT | STRING
 
 callargs ::= expression ("," expression)*
