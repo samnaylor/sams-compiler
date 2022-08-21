@@ -29,7 +29,8 @@ from .ast import (
     IfElse,
     Break,
     Continue,
-    Import
+    Import,
+    Extern
 )
 
 
@@ -62,14 +63,17 @@ class Parser:
     def parse(self) -> Node:
         imports: list[Import] = []
         function_defs: list[FunctionDefinition] = []
+        externs: list[Extern] = []
 
         while not self.match(TokenKind.Eof):
             if self.match(TokenKind.Fun):
                 function_defs.append(self.parse_function_definition())
             elif self.match(TokenKind.Import):
                 imports.append(self.parse_import())
+            elif self.match(TokenKind.Extern):
+                externs.append(self.parse_extern())
 
-        return Program(self.top.location, imports, function_defs)
+        return Program(self.top.location, imports, function_defs, externs)
 
     def parse_import(self) -> Import:
         self.expect(TokenKind.Import)
@@ -78,14 +82,20 @@ class Parser:
         self.advance()
         return Import(self.top.location, mod_name)
 
+    def parse_extern(self) -> Extern:
+        location = self.top.location
+        self.expect(TokenKind.Extern)
+        signature = self.parse_function_signature()
+        return Extern(location, signature)
+
     def parse_function_definition(self) -> FunctionDefinition:
+        self.expect(TokenKind.Fun)
         signature = self.parse_function_signature()
         self.expect(TokenKind.Colon)
         body = self.parse_statement()
         return FunctionDefinition(self.top.location, signature, body)
 
     def parse_function_signature(self) -> FunctionSignature:
-        self.expect(TokenKind.Fun)
         name = self.top.value
         assert name is not None
         self.advance()
@@ -148,7 +158,7 @@ class Parser:
             return self.parse_return_statement()
         elif self.match(TokenKind.If):
             return self.parse_if_statement()
-        elif self.match(TokenKind.Coninute):
+        elif self.match(TokenKind.Continue):
             return self.parse_continue_statement()
         elif self.match(TokenKind.Break):
             return self.parse_break_statement()
