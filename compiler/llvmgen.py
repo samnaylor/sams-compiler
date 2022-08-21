@@ -48,7 +48,7 @@ class LLVMGenerator:
         self.block_start_stack: list[ir.Block] = []
         self.block_end_stack: list[ir.Block] = []
 
-        self.dependencies: set[str] = {}
+        self.dependencies: set[str] = set[str]()
 
     def _optimise(self) -> llvm.ModuleRef:
         module = llvm.parse_assembly(str(self.module))
