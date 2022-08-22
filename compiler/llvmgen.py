@@ -264,32 +264,73 @@ class LLVMGenerator:
         lhs = self.generate(node.lhs, flag=1)
         rhs = self.generate(node.rhs, flag=1)
 
-        match node.op:
-            case "+": return self.builder.add(lhs, rhs)
-            case "-": return self.builder.sub(lhs, rhs)
-            case "*": return self.builder.mul(lhs, rhs)
-            case "/": return self.builder.sdiv(lhs, rhs)
-            case "%": return self.builder.srem(lhs, rhs)
+        if lhs.type == rhs.type and (lhs.type in (ir.IntType(32), ir.IntType(8))):
+            match node.op:
+                case "+": return self.builder.add(lhs, rhs)
+                case "-": return self.builder.sub(lhs, rhs)
+                case "*": return self.builder.mul(lhs, rhs)
+                case "/": return self.builder.sdiv(lhs, rhs)
+                case "%": return self.builder.srem(lhs, rhs)
 
-            case "<<": return self.builder.shl(lhs, rhs)
-            case ">>": return self.builder.ashr(lhs, rhs)
+                case "<<": return self.builder.shl(lhs, rhs)
+                case ">>": return self.builder.ashr(lhs, rhs)
 
-            case "&": return self.builder.and_(lhs, rhs)
-            case "^": return self.builder.xor(lhs, rhs)
-            case "|": return self.builder.or_(lhs, rhs)
+                case "&": return self.builder.and_(lhs, rhs)
+                case "^": return self.builder.xor(lhs, rhs)
+                case "|": return self.builder.or_(lhs, rhs)
 
-            # ? Do these work... or do we need another way of checking the "truthy-ness" of these values
+                # ? Do these work... or do we need another way of checking the "truthy-ness" of these values
 
-            case "and":
-                return self.builder.icmp_signed("!=", self.builder.and_(lhs, rhs), ir.IntType(32)(0))
+                case "and":
+                    return self.builder.icmp_signed("!=", self.builder.and_(lhs, rhs), ir.IntType(32)(0))
 
-            case "xor":
-                return self.builder.icmp_signed("!=", self.builder.xor(lhs, rhs), ir.IntType(32)(0))
+                case "xor":
+                    return self.builder.icmp_signed("!=", self.builder.xor(lhs, rhs), ir.IntType(32)(0))
 
-            case "or":
-                return self.builder.icmp_signed("!=", self.builder.or_(lhs, rhs), ir.IntType(32)(0))
+                case "or":
+                    return self.builder.icmp_signed("!=", self.builder.or_(lhs, rhs), ir.IntType(32)(0))
 
-            case _: llvm_generator_error(self.filename, node.location, f"Unsupported operator `{node.op}`")
+                case _: llvm_generator_error(self.filename, node.location, f"Unsupported operator `{node.op}` for integer arithmetic")
+        elif lhs.type == rhs.type == ir.FloatType():
+            match node.op:
+                case "+": return self.builder.fadd(lhs, rhs)
+                case "-": return self.builder.fsub(lhs, rhs)
+                case "*": return self.builder.fmul(lhs, rhs)
+                case "/": return self.builder.fdiv(lhs, rhs)
+                case "%": return self.builder.frem(lhs, rhs)
+
+                case "and":
+                    return self.builder.icmp_signed(
+                        "!=",
+                        self.builder.and_(
+                            self.builder.fcmp_ordered("!=", lhs, ir.FloatType(0)),
+                            self.builder.fcmp_ordered("!=", rhs, ir.FloatType(0)),
+                        ), ir.IntType(0)
+                    )
+
+                case "xor":
+                    return self.builder.icmp_signed(
+                        "!=",
+                        self.builder.xor(
+                            self.builder.fcmp_ordered("!=", lhs, ir.FloatType(0)),
+                            self.builder.fcmp_ordered("!=", rhs, ir.FloatType(0)),
+                        ), ir.IntType(0)
+                    )
+
+                case "or":
+                    return self.builder.icmp_signed(
+                        "!=",
+                        self.builder.or_(
+                            self.builder.fcmp_ordered("!=", lhs, ir.FloatType(0)),
+                            self.builder.fcmp_ordered("!=", rhs, ir.FloatType(0)),
+                        ), ir.IntType(0)
+                    )
+
+                case "_":
+                    llvm_generator_error(self.filename, node.location, f"Unsupported operator `{node.op}` for float arithmetic")
+        else:
+            # TODO: Suggest casting - we don't support implicit casting
+            llvm_generator_error(self.filename, node.location, f"Unsupported operation `{node.op}` for {lhs.type} and {rhs.type}")
 
     def generate_UnaryOp(self, node: UnaryOp, *, flag: int = 0) -> ir.Value:
         assert self.builder is not None
@@ -358,7 +399,13 @@ class LLVMGenerator:
         lhs = self.generate(node.lhs, flag=1)
         rhs = self.generate(node.rhs, flag=1)
 
-        return self.builder.icmp_signed(node.op, lhs, rhs)
+        if lhs.type == rhs.type and lhs.type in (ir.IntType(8), ir.IntType(32)):
+            return self.builder.icmp_signed(node.op, lhs, rhs)
+        elif lhs.type == rhs.type and lhs.type in (ir.FloatType(),):
+            return self.builder.fcmp_ordered(node.op, lhs, rhs)
+        else:
+            # TODO: suggest casting
+            llvm_generator_error(self.filename, node.location, f"Unsupported comparison `{node.op}` on types {lhs.type} and {rhs.type}")
 
     def generate_IntLiteral(self, node: IntLiteral, *, flag: int = 0) -> ir.Value:
         return ir.IntType(32)(node.int_value)

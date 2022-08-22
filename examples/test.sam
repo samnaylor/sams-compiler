@@ -5,6 +5,8 @@ fun main() -> i32:
     var chr i8 = message[0]
 
     putchar(chr)
-    putchar(<i8>10)
+
+    if (0.1 == 0.1):
+        putchar(<i8>10)
 
     return 0

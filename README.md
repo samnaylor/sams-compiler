@@ -52,12 +52,13 @@ The following are some of the basic features we're hoping to add to the language
   - [ ] Floating points (doubles)
     - [x] Annotation
     - [x] Literal
-    - [ ] Casting floats-ints and ints-floats
+    - [x] Casting floats-ints and ints-floats
     - [ ] Arithmetic
   - [ ] Strings
     - [x] Annotation
     - [x] Literal
     - [ ] Escape characters
+    - [x] Indexing
   - [ ] Use of pointers and references
 - [x] Extern functions
 - [ ] "Imports" or "Modules"
