@@ -7,7 +7,7 @@ function_signature  ::= identifier "(" [function_parameters] ")" "->" type_ident
 function_parameters ::= function_parameter ("," function_parameter)*
 function_parameter  ::= identifier type_identifier
 
-type_identifier ::= "i32"
+type_identifier ::= "i32" | "i8" | "f32" | "string" |
                   | "[" type_identifier "]"  
 
 statement ::= block_statement
