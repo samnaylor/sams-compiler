@@ -28,11 +28,10 @@ Attempting to make something that can self-host 😵‍💫
 
 The following are some of the basic features we're hoping to add to the language.
 
-- [ ] New statement constructs
+- [x] New statement constructs
   - [x] If-Else statements
   - [x] Continue and Break
-  - [ ] Do-While (maybe, if nice syntax can be found)
-- [ ] Operators
+- [x] Operators
   - [x] Comparison
   - [x] Division
   - [x] Modulo
