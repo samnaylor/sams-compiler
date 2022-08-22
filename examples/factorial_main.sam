@@ -1,13 +1,8 @@
+import stdio
 import factorial
 
-extern putchar(c i32) -> i32
 
-fun print_int(x i32) -> i32:
-    if x != 0:
-        print_int(x / 10)
-        putchar((x % 10) + 48)
 
-    return 0
 
 fun main() -> i32:
     var i i32 = 0, values [i32, 5] = [1, 2, 3, 4, 5], result i32 = 0
@@ -16,7 +11,7 @@ fun main() -> i32:
         result = result + factorial(values[i])
         i = i + 1
 
-    print_int(factorial(5))
+    printf("%d", factorial(5))
     putchar(10)
 
     return result
