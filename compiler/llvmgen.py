@@ -89,12 +89,22 @@ class LLVMGenerator:
 
         pmb.populate(pm)
         pmb.opt_level = 3
+        pmb.size_level = 2
 
         pm.add_instruction_combining_pass()
         pm.add_dead_arg_elimination_pass()
         pm.add_dead_code_elimination_pass()
         pm.add_cfg_simplification_pass()
         pm.add_constant_merge_pass()
+        pm.add_global_optimizer_pass()
+        pm.add_ipsccp_pass()
+        pm.add_licm_pass()
+        pm.add_loop_rotate_pass()
+        pm.add_gvn_pass()
+        pm.add_global_dce_pass()
+        pm.add_sroa_pass()
+        pm.add_sccp_pass()
+        pm.add_refprune_pass()
 
         pm.run(module)
 
