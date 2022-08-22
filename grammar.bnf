@@ -70,6 +70,7 @@ unary          ::= postfix
 postfix        ::= primary
                  | postfix "[" expression "]"
                  | postfix "(" [callargs] ")"
+                 | postfix "." identifier
 primary        ::= identifier
                  | constant
                  | "(" expression ")"

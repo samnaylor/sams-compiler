@@ -1,6 +1,11 @@
+import stdio
+
 type Point:
     x i32
     y i32
 
 fun main() -> i32:
+    var p Point = Point(1, 2)
+    printf("(%d, %d)", p.x, p.y)
+    putchar(10)
     return 0

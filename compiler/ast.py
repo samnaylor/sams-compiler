@@ -67,6 +67,12 @@ class Index(Expr):
 
 
 @dataclass(slots=True, frozen=True)
+class Attr(Expr):
+    target: Expr
+    attr: str
+
+
+@dataclass(slots=True, frozen=True)
 class BinaryOp(Expr):
     op: Literal["+", "-", "*", "/", "%", "<<", ">>", "^", "|", "&", "and", "xor", "or"]
     lhs: Expr

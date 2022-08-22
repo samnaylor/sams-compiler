@@ -35,7 +35,8 @@ from .ast import (
     FloatLiteral,
     StringLiteral,
     Cast,
-    StructDefinition
+    StructDefinition,
+    Attr
 )
 
 
@@ -48,6 +49,8 @@ class Parser:
         self.filename = filename
         self.tokens = tokenise(source, filename)
         self.top = next(self.tokens)
+
+        self.types: set[str] = {"i32", "i8", "float", "string"}
 
     def advance(self) -> None:
         self.top = next(self.tokens)
@@ -98,6 +101,7 @@ class Parser:
         self.expect(TokenKind.Type)
         name = self.top.value
         assert name is not None
+        self.types.add(name)
         self.advance()
         self.expect(TokenKind.Colon)
         self.expect(TokenKind.Indent)
@@ -172,18 +176,9 @@ class Parser:
 
     def parse_type_identifier(self) -> TypeIdentifier:
         location = self.top.location
-        if self.match(TokenKind.Identifier, value="i32"):
+        if self.match(TokenKind.Identifier) and (typ := self.top.value) in self.types:
             self.advance()
-            return TypeIdentifier(location, "i32")
-        elif self.match(TokenKind.Identifier, value="i8"):
-            self.advance()
-            return TypeIdentifier(location, "i8")
-        elif self.match(TokenKind.Identifier, value="f32"):
-            self.advance()
-            return TypeIdentifier(location, "f32")
-        elif self.match(TokenKind.Identifier, "string"):
-            self.advance()
-            return TypeIdentifier(location, "string")
+            return TypeIdentifier(location, typ)
         elif self.match(TokenKind.Lsqu):
             self.advance()
             type = self.parse_type_identifier()
@@ -496,6 +491,12 @@ class Parser:
                 args = self.parse_callargs()
             self.expect(TokenKind.Rpar)
             return Call(lhs.location, lhs, args)
+        elif self.match(TokenKind.Dot):
+            self.advance()
+            attr = self.top.value
+            assert attr is not None
+            self.advance()
+            return Attr(lhs.location, lhs, attr)
         else:
             return lhs
 

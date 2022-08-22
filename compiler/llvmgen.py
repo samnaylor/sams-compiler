@@ -35,7 +35,8 @@ from .ast import (
     FloatLiteral,
     StringLiteral,
     Cast,
-    StructDefinition
+    StructDefinition,
+    Attr
 )
 
 from .lexer import generic_error, Location
@@ -63,7 +64,13 @@ class LLVMGenerator:
 
         self.dependencies: set[str] = set[str]()
 
-        self.structures: dict[str, tuple[ir.Type, list[str]]] = {}
+        self.types: dict[str, ir.Type] = {
+            "i32": ir.IntType(32),
+            "i8": ir.IntType(8),
+            "string": ir.IntType(8).as_pointer(),
+            "float": ir.FloatType()
+        }
+        self.structures: dict[str, list[str]] = {}
 
         self._strcount = -1
 
@@ -135,7 +142,7 @@ class LLVMGenerator:
 
     def generate_StructDefinition(self, node: StructDefinition, *, flag: int = 0) -> None:
         struct = self.context.get_identified_type(f"struct.{node.struct_name}")
-        self.structures[node.struct_name] = (struct, [])
+        self.types[node.struct_name] = struct
 
         body: list[ir.Type] = []
         names: list[str] = []
@@ -148,7 +155,7 @@ class LLVMGenerator:
             body.append(type)
 
         struct.set_body(*body)
-        self.structures[node.struct_name] = (struct, names)
+        self.structures[node.struct_name] = names
 
         constructor = ir.Function(self.module, ir.FunctionType(struct, body), node.struct_name)
         builder = ir.IRBuilder(constructor.append_basic_block("entry"))
@@ -160,6 +167,7 @@ class LLVMGenerator:
             builder.store(arg, ptr)
 
         builder.ret(builder.load(alloca))
+        self.functions[node.struct_name] = constructor
 
     def generate_Extern(self, node: Extern, *, flag: int = 0) -> None:
         self.generate(node.function_signature)
@@ -204,17 +212,8 @@ class LLVMGenerator:
     def generate_TypeIdentifier(self, node: TypeIdentifier, *, flag: int = 0) -> ir.Type:
         base: ir.Type
 
-        if node.typename == "i32":
-            base = ir.IntType(32)
-
-        elif node.typename == "i8":
-            base = ir.IntType(8)
-
-        elif node.typename == "string":
-            base = ir.IntType(8).as_pointer()
-
-        elif node.typename == "f32":
-            base = ir.FloatType()
+        if (typ := self.types.get(node.typename)) is not None:
+            base = typ
 
         if node.is_array:
             base = ir.ArrayType(base, node.array_sz)
@@ -500,3 +499,17 @@ class LLVMGenerator:
             case ("float", "i32"): return self.builder.sitofp(value, totyp)
             case _:
                 llvm_generator_error(self.filename, node.location, f"Cast not supported! {value.type} to {totyp}")
+
+    def generate_Attr(self, node: Attr, *, flag: int = 0) -> ir.Value:
+        assert self.builder is not None
+
+        # TODO: serious error handling here...
+
+        target = self.generate(node.target, flag=0)
+        idx = self.structures[target.type.pointee.name.replace("struct.", "")].index(node.attr)
+        attr = self.builder.gep(target, (ir.IntType(32)(0), ir.IntType(32)(idx)), inbounds=True)
+
+        if flag == 1:
+            return self.builder.load(attr)
+
+        return attr
