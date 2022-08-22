@@ -171,6 +171,9 @@ class LLVMGenerator:
         if node.typename == "i32":
             base = ir.IntType(32)
 
+        elif node.typename == "i8":
+            base = ir.IntType(8)
+
         elif node.typename == "string":
             base = ir.IntType(8).as_pointer()
 
@@ -248,6 +251,7 @@ class LLVMGenerator:
         typ = self.generate(node.type_id)
         alloca = self.builder.alloca(typ, name=node.identifier)
         value = self.generate(node.initialiser, flag=1)
+
         self.builder.store(value, alloca)
         self.locals[node.identifier] = alloca
 
@@ -366,7 +370,7 @@ class LLVMGenerator:
         assert self.builder is not None
         typ = ir.ArrayType(ir.IntType(8), len(node.string_value))
         glob = ir.GlobalVariable(self.module, typ, f".str{self.strcount}")
-        glob.initializer = ir.Constant(typ, bytearray(node.string_value))
+        glob.initializer = ir.Constant(typ, bytearray(node.string_value.encode()))
         glob.global_constant = True
 
         return self.builder.gep(glob, (ir.IntType(32)(0), ir.IntType(32)(0)), inbounds=True)
@@ -388,14 +392,15 @@ class LLVMGenerator:
         target = self.generate(node.target, flag=0)
         index = self.generate(node.index, flag=1)
 
+        if target.type == ir.IntType(8).as_pointer().as_pointer():
+            target = self.builder.load(target)
+            value = self.builder.gep(target, (index,), inbounds=True)
+            return self.builder.load(value)
+
         value = self.builder.gep(target, (ir.IntType(32)(0), index), inbounds=True)
 
         if flag == 1:
-            value = self.builder.load(value)
-            if value.type == ir.IntType(8):
-                value = self.builder.zext(value, ir.IntType(32))
-
-            return value
+            return self.builder.load(value)
 
         return value
 
@@ -406,11 +411,9 @@ class LLVMGenerator:
         value = self.generate(node.value, flag=1)
 
         match (str(totyp), str(value.type)):
-            case ("i32", "float"):
-                return self.builder.fptosi(value, totyp)
-
-            case ("float", "i32"):
-                return self.builder.sitofp(value, totyp)
-
+            case ("i32", "i8"): return self.builder.zext(value, totyp)
+            case ("i8", "i32"): return self.builder.trunc(value, totyp)
+            case ("i32", "float"): return self.builder.fptosi(value, totyp)
+            case ("float", "i32"): return self.builder.sitofp(value, totyp)
             case _:
                 llvm_generator_error(self.filename, node.location, f"Cast not supported! {value.type} to {totyp}")

@@ -144,6 +144,9 @@ class Parser:
         if self.match(TokenKind.Identifier, value="i32"):
             self.advance()
             return TypeIdentifier(location, "i32")
+        elif self.match(TokenKind.Identifier, value="i8"):
+            self.advance()
+            return TypeIdentifier(location, "i8")
         elif self.match(TokenKind.Identifier, value="f32"):
             self.advance()
             return TypeIdentifier(location, "f32")
