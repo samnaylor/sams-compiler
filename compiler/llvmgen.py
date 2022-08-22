@@ -93,7 +93,6 @@ class LLVMGenerator:
         pm.add_instruction_combining_pass()
         pm.add_dead_arg_elimination_pass()
         pm.add_dead_code_elimination_pass()
-        pm.add_function_inlining_pass(1_000)
         pm.add_cfg_simplification_pass()
         pm.add_constant_merge_pass()
 
