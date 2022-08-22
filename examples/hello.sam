@@ -1,14 +1,17 @@
 extern puts(s string) -> i32
 extern putchar(c i32) -> i32
 
+extern strlen(s string) -> i32
+
 
 fun main() -> i32:
-    var idx i32 = 0, hello_world [i32, 12] = [72, 101, 108, 108, 111, 32, 119, 111, 114, 108, 100, 10]
-
     puts("Hello, World!")
 
-    while idx < 12:
-        putchar(hello_world[idx])
-        idx = idx + 1
+    var idx i32 = 0, message string = "Hello, World!"
+
+    while idx < strlen(message):
+        putchar(message[idx])
+
+    putchar(10)
 
     return <i32>1.0

@@ -478,7 +478,7 @@ class Parser:
             self.advance()
         elif self.match(TokenKind.StringLiteral):
             assert self.top.value is not None
-            node = StringLiteral(location, self.top.value[1:-1])
+            node = StringLiteral(location, self.top.value[1:-1] + "\0")
             self.advance()
         elif self.match(TokenKind.FloatLiteral):
             assert self.top.value is not None

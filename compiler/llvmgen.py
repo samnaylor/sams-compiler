@@ -4,7 +4,6 @@ from pathlib import Path
 from typing import cast
 
 from llvmlite import ir, binding as llvm
-from llvmlite.llvmpy.core import Constant
 
 from .ast import (
     Extern,
@@ -365,10 +364,12 @@ class LLVMGenerator:
 
     def generate_StringLiteral(self, node: StringLiteral, *, flag: int = 0) -> ir.Value:
         assert self.builder is not None
-        # TODO: This method is deprecated :( do the new way
-        glob = ir.GlobalVariable(self.module, ir.ArrayType(ir.IntType(8), len(node.string_value) + 1), f".str{self.strcount}")
-        glob.initializer = Constant.stringz(node.string_value)
-        return self.builder.gep(glob, (ir.IntType(32)(0), ir.IntType(32)(0)))
+        typ = ir.ArrayType(ir.IntType(8), len(node.string_value))
+        glob = ir.GlobalVariable(self.module, typ, f".str{self.strcount}")
+        glob.initializer = ir.Constant(typ, bytearray(node.string_value))
+        glob.global_constant = True
+
+        return self.builder.gep(glob, (ir.IntType(32)(0), ir.IntType(32)(0)), inbounds=True)
 
     def generate_Call(self, node: Call, *, flag: int = 0) -> ir.Value:
         assert self.builder is not None
@@ -390,7 +391,11 @@ class LLVMGenerator:
         value = self.builder.gep(target, (ir.IntType(32)(0), index), inbounds=True)
 
         if flag == 1:
-            return self.builder.load(value)
+            value = self.builder.load(value)
+            if value.type == ir.IntType(8):
+                value = self.builder.zext(value, ir.IntType(32))
+
+            return value
 
         return value
 
