@@ -186,7 +186,14 @@ class FunctionDefinition(Node):
 
 
 @dataclass(slots=True, frozen=True)
+class StructDefinition(Node):
+    struct_name: str
+    struct_body: list[FunctionParameter]
+
+
+@dataclass(slots=True, frozen=True)
 class Program(Node):
     imports: list[Import]
+    structs: list[StructDefinition]
     externs: list[Extern]
     function_defs: list[FunctionDefinition]
