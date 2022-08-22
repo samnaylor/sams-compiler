@@ -34,7 +34,8 @@ from .ast import (
     UnaryOp,
     FloatLiteral,
     StringLiteral,
-    Cast
+    Cast,
+    StructDefinition
 )
 
 
@@ -66,6 +67,7 @@ class Parser:
 
     def parse(self) -> Node:
         imports: list[Import] = []
+        structs: list[StructDefinition] = []
         externs: list[Extern] = []
         function_defs: list[FunctionDefinition] = []
 
@@ -78,8 +80,10 @@ class Parser:
                 imports.append(self.parse_import())
             elif self.match(TokenKind.Extern):
                 externs.append(self.parse_extern())
+            elif self.match(TokenKind.Type):
+                structs.append(self.parse_struct_definition())
 
-        return Program(location, imports, externs, function_defs)
+        return Program(location, imports, structs, externs, function_defs)
 
     def parse_import(self) -> Import:
         location = self.top.location
@@ -88,6 +92,26 @@ class Parser:
         assert mod_name is not None
         self.advance()
         return Import(location, mod_name)
+
+    def parse_struct_definition(self) -> StructDefinition:
+        location = self.top.location
+        self.expect(TokenKind.Type)
+        name = self.top.value
+        assert name is not None
+        self.advance()
+        self.expect(TokenKind.Colon)
+        self.expect(TokenKind.Indent)
+        body: list[FunctionParameter] = []
+
+        while not self.match(TokenKind.Dedent):
+            body.append(self.parse_function_parameter())
+
+        self.expect(TokenKind.Dedent)
+
+        if len(body) == 0:
+            parser_error(self.filename, location, f"Struct definition ({name}) has no members!")
+
+        return StructDefinition(location, name, body)
 
     def parse_extern(self) -> Extern:
         location = self.top.location
