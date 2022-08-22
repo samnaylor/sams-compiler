@@ -49,11 +49,11 @@ The following are some of the basic features we're hoping to add to the language
     - [x] Xor
     - [x] Or
 - [ ] New primitive data-types
-  - [ ] Floating points (doubles)
+  - [x] Floating points (f32)
     - [x] Annotation
     - [x] Literal
     - [x] Casting floats-ints and ints-floats
-    - [ ] Arithmetic
+    - [x] Arithmetic
   - [ ] Strings
     - [x] Annotation
     - [x] Literal
