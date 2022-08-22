@@ -1,5 +1,6 @@
-program             ::= imports* externs* function_definition*
+program             ::= imports* struct* externs* function_definition*
 imports             ::= "import" identifier
+struct              ::= "type" identifier ":" INDENT function_parameter+ DEDENT
 externs             ::= "extern" function_signature
 function_definition ::= "fun" function_signature ":" statement
 function_signature  ::= identifier "(" [function_parameters] ")" ["..."] "->" type_identifier
