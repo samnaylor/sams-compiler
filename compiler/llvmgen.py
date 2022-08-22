@@ -34,7 +34,8 @@ from .ast import (
     UnaryOp,
     FloatLiteral,
     StringLiteral,
-    Cast
+    Cast,
+    StructDefinition
 )
 
 from .lexer import generic_error, Location
@@ -48,6 +49,7 @@ def llvm_generator_error(filename: str, location: Location, message: str) -> Non
 class LLVMGenerator:
     def __init__(self, filename: str, callpath: Path):
         self.module = ir.Module()
+        self.context = self.module.context
         self.filename = self.module.name = filename
         self.callpath = callpath
 
@@ -60,6 +62,8 @@ class LLVMGenerator:
         self.block_end_stack: list[ir.Block] = []
 
         self.dependencies: set[str] = set[str]()
+
+        self.structures: dict[str, tuple[ir.Type, list[str]]] = {}
 
         self._strcount = -1
 
@@ -93,7 +97,8 @@ class LLVMGenerator:
         return module
 
     def __str__(self) -> str:
-        return str(self._optimise())
+        # return str(self._optimise())
+        return str(self.module)
 
     def generate_default(self, node: Node, *, flag: int = 0) -> None:
         raise NotImplementedError(node.__class__.__name__)
@@ -104,6 +109,9 @@ class LLVMGenerator:
     def generate_Program(self, node: Program, *, flag: int = 0) -> None:
         for imp in node.imports:
             self.generate(imp)
+
+        for struct in node.structs:
+            self.generate(struct)
 
         for ext in node.externs:
             self.generate(ext)
@@ -124,6 +132,34 @@ class LLVMGenerator:
             tree = Parser(f.read(), node.module_name).parse()
 
         self.generate(tree, flag=1)
+
+    def generate_StructDefinition(self, node: StructDefinition, *, flag: int = 0) -> None:
+        struct = self.context.get_identified_type(f"struct.{node.struct_name}")
+        self.structures[node.struct_name] = (struct, [])
+
+        body: list[ir.Type] = []
+        names: list[str] = []
+
+        for (idx, param) in enumerate(node.struct_body):
+            name = param.parameter_name
+            type = cast(ir.Type, self.generate(param.parameter_type))
+
+            names.append(name)
+            body.append(type)
+
+        struct.set_body(*body)
+        self.structures[node.struct_name] = (struct, names)
+
+        constructor = ir.Function(self.module, ir.FunctionType(struct, body), node.struct_name)
+        builder = ir.IRBuilder(constructor.append_basic_block("entry"))
+
+        alloca = builder.alloca(struct)
+
+        for (idx, arg) in enumerate(constructor.args):
+            ptr = builder.gep(alloca, (ir.IntType(32)(0), ir.IntType(32)(idx)))
+            builder.store(arg, ptr)
+
+        builder.ret(builder.load(alloca))
 
     def generate_Extern(self, node: Extern, *, flag: int = 0) -> None:
         self.generate(node.function_signature)
