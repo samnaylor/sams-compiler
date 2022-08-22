@@ -59,16 +59,17 @@ The following are some of the basic features we're hoping to add to the language
     - [x] Literal
     - [ ] Escape characters
     - [x] Indexing
-  - [ ] Use of pointers and references
 - [x] Extern functions
 - [ ] "Imports" or "Modules"
   - [x] "import" keyword
   - [x] Relative to compilation file not compiler
   - [ ] namespace system? access using `<module name>.<function>`?
   - [ ] libc extern libraries as a stdlib
-- [ ] Structures
-  - [ ] Define syntax
-  - [ ] Automatically generated constructors
+- [x] Structures
+  - [x] Define syntax
+  - [x] Automatically generated constructors
+  - [x] Get attributes
+- [ ] Pointers and References
 
 ### Contributors
 
