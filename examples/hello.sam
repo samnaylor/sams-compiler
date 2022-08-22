@@ -1,7 +1,5 @@
-extern puts(s string) -> i32
-extern putchar(c i32) -> i32
-
-extern strlen(s string) -> i32
+import stdio
+import string
 
 
 fun main() -> i32:

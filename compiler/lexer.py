@@ -77,6 +77,7 @@ class TokenKind(Enum):  # TODO: clean this up :)
     Eof = 40
     Indent = 41
     Dedent = 42
+    DoesNotExist = 55  # ! Because of "." and "..." and the way we search for longer symbols...
 
     def __repr__(self) -> str:
         return self.name
@@ -144,6 +145,8 @@ def tokenise(source: str, filename: str) -> Generator[Token, None, None]:
         ">=": TokenKind.Ge,
         "<=": TokenKind.Le,
         "->": TokenKind.Arrow,
+
+        "..": TokenKind.DoesNotExist
     }
 
     while index < len(source):
