@@ -188,7 +188,7 @@ def tokenise(source: str, filename: str) -> Generator[Token, None, None]:
 
             yield Token(keywords.get(identifier, TokenKind.Identifier), identifier, Location(line, column - len(identifier)))
 
-        elif source[index] in (digits + "."):
+        elif source[index] in digits:
             number = source[index]
             column += 1
             while ((index := index + 1) < len(source)) and (source[index] in digits + "_" + "."):
