@@ -171,6 +171,7 @@ class FunctionSignature(Node):
     function_name: str
     function_params: list[FunctionParameter]
     function_retty: TypeIdentifier
+    is_variadic: bool
 
 
 @dataclass(slots=True, frozen=True)

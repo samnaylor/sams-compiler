@@ -2,7 +2,7 @@ program             ::= imports* externs* function_definition*
 imports             ::= "import" identifier
 externs             ::= "extern" function_signature
 function_definition ::= "fun" function_signature ":" statement
-function_signature  ::= identifier "(" [function_parameters] ")" "->" type_identifier
+function_signature  ::= identifier "(" [function_parameters] ")" ["..."] "->" type_identifier
 
 function_parameters ::= function_parameter ("," function_parameter)*
 function_parameter  ::= identifier type_identifier

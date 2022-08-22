@@ -71,6 +71,8 @@ class TokenKind(Enum):  # TODO: clean this up :)
     Ampersand = 46
     Pipe = 47
     Caret = 48
+    Variadic = 53
+    Dot = 54
 
     Eof = 40
     Indent = 41
@@ -134,6 +136,8 @@ def tokenise(source: str, filename: str) -> Generator[Token, None, None]:
         "^": TokenKind.Caret,
         "&": TokenKind.Ampersand,
         "|": TokenKind.Pipe,
+        "...": TokenKind.Variadic,
+        ".": TokenKind.Dot,
 
         "==": TokenKind.Eq,
         "!=": TokenKind.Ne,

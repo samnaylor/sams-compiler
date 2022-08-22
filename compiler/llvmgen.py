@@ -155,7 +155,7 @@ class LLVMGenerator:
         retty = self.generate(node.function_retty)
         types = [self.generate(param.parameter_type) for param in node.function_params]
 
-        signature = ir.FunctionType(retty, types)
+        signature = ir.FunctionType(retty, types, node.is_variadic)
         function = ir.Function(self.module, signature, node.function_name)
 
         for (arg, param) in zip(function.args, node.function_params):

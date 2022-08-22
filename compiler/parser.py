@@ -115,11 +115,18 @@ class Parser:
             parameters = self.parse_function_parameters()
 
         self.expect(TokenKind.Rpar)
+
+        is_variadic = False
+
+        if self.match(TokenKind.Variadic):
+            is_variadic = True
+            self.advance()
+
         self.expect(TokenKind.Arrow)
 
         retty = self.parse_type_identifier()
 
-        return FunctionSignature(location, name, parameters, retty)
+        return FunctionSignature(location, name, parameters, retty, is_variadic)
 
     def parse_function_parameters(self) -> list[FunctionParameter]:
         parameters: list[FunctionParameter] = []
