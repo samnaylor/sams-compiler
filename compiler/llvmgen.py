@@ -34,7 +34,8 @@ from .ast import (
     Import,
     UnaryOp,
     FloatLiteral,
-    StringLiteral
+    StringLiteral,
+    Cast
 )
 
 from .lexer import generic_error, Location
@@ -392,3 +393,19 @@ class LLVMGenerator:
             return self.builder.load(value)
 
         return value
+
+    def generate_Cast(self, node: Cast, *, flag: int = 0) -> ir.Value:
+        assert self.builder is not None
+
+        totyp = self.generate(node.to)
+        value = self.generate(node.value, flag=1)
+
+        match (str(totyp), str(value.type)):
+            case ("i32", "float"):
+                return self.builder.fptosi(value, totyp)
+
+            case ("float", "i32"):
+                return self.builder.sitofp(value, totyp)
+
+            case _:
+                llvm_generator_error(self.filename, node.location, f"Cast not supported! {value.type} to {totyp}")

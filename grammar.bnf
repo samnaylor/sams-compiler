@@ -60,8 +60,10 @@ shift          ::= additive
 additive       ::= multiplicative
                  | additive ("+" multiplicative)*
                  | additive ("-" multiplicative)*
-multiplicative ::= unary
-                 | multiplicative ("*" unary)*
+multiplicative ::= cast
+                 | multiplicative ("*" cast)*
+cast           ::= unary
+                 | "<" identifier ">" cast
 unary          ::= postfix
                  | "-" unary
 postfix        ::= primary

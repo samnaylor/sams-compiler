@@ -33,7 +33,8 @@ from .ast import (
     Extern,
     UnaryOp,
     FloatLiteral,
-    StringLiteral
+    StringLiteral,
+    Cast
 )
 
 
@@ -417,15 +418,26 @@ class Parser:
         return lhs
 
     def parse_multiplicative(self) -> Expr:
-        lhs = self.parse_unary()
+        lhs = self.parse_cast()
 
         while self.match(TokenKind.Star, TokenKind.Slash, TokenKind.Percent):
             op = cast(Literal["*", "/", "%"], self.top.value)
             self.advance()
-            rhs = self.parse_unary()
+            rhs = self.parse_cast()
             lhs = BinaryOp(lhs.location, op, lhs, rhs)
 
         return lhs
+
+    def parse_cast(self) -> Expr:
+        location = self.top.location
+        if self.match(TokenKind.Lt):
+            self.advance()
+            totyp = self.parse_type_identifier()
+            self.expect(TokenKind.Gt)
+            value = self.parse_cast()
+            return Cast(location, totyp, value)
+
+        return self.parse_unary()
 
     def parse_unary(self) -> Expr:
         location = self.top.location

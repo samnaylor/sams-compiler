@@ -87,6 +87,12 @@ class UnaryOp(Expr):
 
 
 @dataclass(slots=True, frozen=True)
+class Cast(Expr):
+    to: TypeIdentifier
+    value: Expr
+
+
+@dataclass(slots=True, frozen=True)
 class Selection(Expr):
     condition: Expr
     if_true: Expr
