@@ -42,6 +42,7 @@ class TokenKind(Enum):  # TODO: clean this up :)
     Or = 50
     Xor = 51
     Not = 52
+    Type = 55
 
     Gt = 20
     Lt = 21
@@ -113,6 +114,7 @@ def tokenise(source: str, filename: str) -> Generator[Token, None, None]:
         "or": TokenKind.Or,
         "xor": TokenKind.Xor,
         "not": TokenKind.Not,
+        "type": TokenKind.Type
     }
 
     symbols = {
