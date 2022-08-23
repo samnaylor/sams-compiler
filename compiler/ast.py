@@ -24,6 +24,8 @@ class Stmt(Node):
 @dataclass(slots=True, frozen=True)
 class TypeIdentifier(Node):
     typename: str
+    is_pointer: bool = field(default=False)
+    is_reference: bool = field(default=False)
     is_array: bool = field(default=False)
     array_sz: int = field(default=0)
 

@@ -175,7 +175,17 @@ class Parser:
 
     def parse_type_identifier(self) -> TypeIdentifier:
         location = self.top.location
-        if self.match(TokenKind.Identifier) and (typ := self.top.value) in self.types:
+        if self.match(TokenKind.Ptr):
+            self.advance()
+            type = self.parse_type_identifier()
+            assert not (type.is_pointer or type.is_reference)
+            return TypeIdentifier(location, type.typename, is_pointer=True)
+        elif self.match(TokenKind.Ref):
+            self.advance()
+            type = self.parse_type_identifier()
+            assert not (type.is_pointer or type.is_reference)
+            return TypeIdentifier(location, type.typename, is_reference=True)
+        elif self.match(TokenKind.Identifier) and (typ := self.top.value) in self.types:
             self.advance()
             return TypeIdentifier(location, typ)
         elif self.match(TokenKind.Lsqu):
@@ -187,7 +197,7 @@ class Parser:
             assert size is not None and size.isdigit()
             self.advance()
             self.expect(TokenKind.Rsqu)
-            return TypeIdentifier(location, type.typename, True, int(size))
+            return TypeIdentifier(location, type.typename, is_array=True, array_sz=int(size))
         else:
             parser_error(self.filename, location, f"Unexpected `{self.top.value}` in parse_type_identifier")
 
