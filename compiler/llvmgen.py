@@ -175,6 +175,7 @@ class LLVMGenerator:
         struct.set_body(*body)
 
         if flag == 1:
+            assert self.current_namespace is not None
             self.current_namespace.structs[node.struct_name] = names
         else:
             self.structures[node.struct_name] = names
@@ -191,6 +192,7 @@ class LLVMGenerator:
         builder.ret(builder.load(alloca))
 
         if flag == 1:
+            assert self.current_namespace is not None
             self.current_namespace.functions[node.struct_name] = constructor
         else:
             self.functions[node.struct_name] = constructor
@@ -232,6 +234,7 @@ class LLVMGenerator:
             arg.name = param.parameter_name
 
         if flag == 1:
+            assert self.current_namespace is not None
             self.current_namespace.functions[node.function_name] = function
         else:
             self.functions[node.function_name] = function
@@ -330,8 +333,8 @@ class LLVMGenerator:
     def generate_BinaryOp(self, node: BinaryOp, *, flag: int = 0) -> ir.Value:
         assert self.builder is not None
 
-        lhs = self.generate(node.lhs, flag=1)
-        rhs = self.generate(node.rhs, flag=1)
+        lhs = cast(ir.Constant, self.generate(node.lhs, flag=1))
+        rhs = cast(ir.Constant, self.generate(node.rhs, flag=1))
 
         if lhs.type == rhs.type and (lhs.type in (ir.IntType(32), ir.IntType(8))):
             match node.op:
@@ -359,7 +362,6 @@ class LLVMGenerator:
                 case "or":
                     return self.builder.icmp_signed("!=", self.builder.or_(lhs, rhs), ir.IntType(32)(0))
 
-                case _: llvm_generator_error(self.filename, node.location, f"Unsupported operator `{node.op}` for integer arithmetic")
         elif lhs.type == rhs.type == ir.FloatType():
             match node.op:
                 case "+": return self.builder.fadd(lhs, rhs)
@@ -394,9 +396,6 @@ class LLVMGenerator:
                             self.builder.fcmp_ordered("!=", rhs, ir.FloatType(0)),
                         ), ir.IntType(0)
                     )
-
-                case "_":
-                    llvm_generator_error(self.filename, node.location, f"Unsupported operator `{node.op}` for float arithmetic")
         else:
             # TODO: Suggest casting - we don't support implicit casting
             llvm_generator_error(self.filename, node.location, f"Unsupported operation `{node.op}` for {lhs.type} and {rhs.type}")
@@ -408,11 +407,9 @@ class LLVMGenerator:
 
         match node.op:
             case "-": return self.builder.neg(rhs)
+            case "not": return self.builder.icmp_signed("!=", rhs, ir.IntType(32)(0))
 
             # ? Same question as logical operators in the binary op section...
-
-            case "not": return self.builder.icmp_signed("!=", rhs, ir.IntType(32)(0))
-            case _: llvm_generator_error(self.filename, node.location, f"Unsupported operator `{node.op}`")
 
     def generate_Variable(self, node: Variable, *, flag: int = 0) -> ir.Value:
         assert self.builder is not None
@@ -462,10 +459,10 @@ class LLVMGenerator:
         con = self.generate(node.condition, flag=1)
         self.builder.cbranch(con, true_block, else_block)
         self.builder.position_at_start(true_block)
-        lhs = self.generate(node.if_true, flag=1)
+        lhs = cast(ir.Constant, self.generate(node.if_true, flag=1))
         self.builder.branch(post_block)
         self.builder.position_at_start(else_block)
-        rhs = self.generate(node.if_alt, flag=1)
+        rhs = cast(ir.Constant, self.generate(node.if_alt, flag=1))
         self.builder.branch(post_block)
         self.builder.position_at_start(post_block)
         phi = self.builder.phi(lhs.type)
@@ -477,8 +474,8 @@ class LLVMGenerator:
     def generate_ComparisonOp(self, node: ComparisonOp, *, flag: int = 0) -> ir.Value:
         assert self.builder is not None
 
-        lhs = self.generate(node.lhs, flag=1)
-        rhs = self.generate(node.rhs, flag=1)
+        lhs = cast(ir.Constant, self.generate(node.lhs, flag=1))
+        rhs = cast(ir.Constant, self.generate(node.rhs, flag=1))
 
         if lhs.type == rhs.type and lhs.type in (ir.IntType(8), ir.IntType(32)):
             return self.builder.icmp_signed(node.op, lhs, rhs)
@@ -517,7 +514,7 @@ class LLVMGenerator:
     def generate_Index(self, node: Index, *, flag: int = 0) -> ir.Value:
         assert self.builder is not None
 
-        target = self.generate(node.target, flag=0)
+        target = cast(ir.Constant, self.generate(node.target, flag=0))
         index = self.generate(node.index, flag=1)
 
         if target.type == ir.IntType(8).as_pointer().as_pointer():
@@ -536,7 +533,7 @@ class LLVMGenerator:
         assert self.builder is not None
 
         totyp = self.generate(node.to)
-        value = self.generate(node.value, flag=1)
+        value = cast(ir.Constant, self.generate(node.value, flag=1))
 
         match (str(totyp), str(value.type)):
             case ("i32", "i8"): return self.builder.zext(value, totyp)
@@ -551,7 +548,7 @@ class LLVMGenerator:
 
         # TODO: serious error handling here...
 
-        target = self.generate(node.target, flag=0)
+        target = cast(ir.Constant, self.generate(node.target, flag=0))
 
         if isinstance(target, Namespace):
             return target.get(node.attr)

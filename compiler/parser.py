@@ -1,4 +1,4 @@
-from typing import cast
+from typing import cast, Literal
 
 from .lexer import Location, TokenKind, generic_error, tokenise
 from .ast import (
@@ -20,7 +20,6 @@ from .ast import (
     Assignment,
     Selection,
     ArrayLiteral,
-    Literal,
     IntLiteral,
     ComparisonOp,
     BinaryOp,
