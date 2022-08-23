@@ -118,8 +118,8 @@ class LLVMGenerator:
         return module
 
     def __str__(self) -> str:
-        # return str(self._optimise())
-        return str(self.module)
+        return str(self._optimise())
+        # return str(self.module)
 
     def generate_default(self, node: Node, *, flag: int = 0) -> None:
         raise NotImplementedError(node.__class__.__name__)
