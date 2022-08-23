@@ -230,8 +230,13 @@ class LLVMGenerator:
         return base
 
     def generate_Block(self, node: Block, *, flag: int = 0) -> None:
+        assert self.builder is not None
+
         for stmt in node.body:
             self.generate(stmt)
+
+        if not self.builder.block.is_terminated:
+            self.builder.unreachable()
 
     def generate_Break(self, node: Break, *, flag: int = 0) -> None:
         assert self.builder is not None
