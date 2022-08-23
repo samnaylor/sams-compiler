@@ -178,13 +178,8 @@ class Parser:
         if self.match(TokenKind.Ptr):
             self.advance()
             type = self.parse_type_identifier()
-            assert not (type.is_pointer or type.is_reference)
+            assert not (type.is_pointer)
             return TypeIdentifier(location, type.typename, is_pointer=True)
-        elif self.match(TokenKind.Ref):
-            self.advance()
-            type = self.parse_type_identifier()
-            assert not (type.is_pointer or type.is_reference)
-            return TypeIdentifier(location, type.typename, is_reference=True)
         elif self.match(TokenKind.Identifier) and (typ := self.top.value) in self.types:
             self.advance()
             return TypeIdentifier(location, typ)
@@ -327,9 +322,9 @@ class Parser:
         if not self.match(TokenKind.Equal):
             return lhs
 
-        if not isinstance(lhs, (Variable, Index)):
-            # TODO: This location will be wrong... needs to be the lhs location
-            parser_error(self.filename, lhs.location, f"lvalue must be assignable, {lhs.__class__.__name__} is not!")
+        # if not isinstance(lhs, (Variable, Index)):
+        #     # TODO: This location will be wrong... needs to be the lhs location
+        #     parser_error(self.filename, lhs.location, f"lvalue must be assignable, {lhs.__class__.__name__} is not!")
 
         self.expect(TokenKind.Equal)
         value = self.parse_assignment()
@@ -482,6 +477,9 @@ class Parser:
         if self.match(TokenKind.Minus):
             self.advance()
             return UnaryOp(location, "-", self.parse_unary())
+        elif self.match(TokenKind.Ref):
+            self.advance()
+            return UnaryOp(location, "ref", self.parse_unary())
         elif self.match(TokenKind.Deref):
             self.advance()
             return UnaryOp(location, "deref", self.parse_unary())

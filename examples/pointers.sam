@@ -1,0 +1,8 @@
+fun plus_one (x ptr i32) -> i32:
+    (deref x) = (deref x) + 1
+    return 0
+
+fun main() -> i32:
+    var x i32 = 5
+    plus_one(ref x)
+    return x

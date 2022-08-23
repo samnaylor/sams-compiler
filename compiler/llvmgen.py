@@ -118,8 +118,8 @@ class LLVMGenerator:
         return module
 
     def __str__(self) -> str:
-        return str(self._optimise())
-        # return str(self.module)
+        # return str(self._optimise())
+        return str(self.module)
 
     def generate_default(self, node: Node, *, flag: int = 0) -> None:
         raise NotImplementedError(node.__class__.__name__)
@@ -250,6 +250,9 @@ class LLVMGenerator:
         if node.is_array:
             base = ir.ArrayType(base, node.array_sz)
 
+        elif node.is_pointer:
+            base = ir.PointerType(base)
+
         return base
 
     def generate_Block(self, node: Block, *, flag: int = 0) -> None:
@@ -336,6 +339,9 @@ class LLVMGenerator:
         lhs = cast(ir.Constant, self.generate(node.lhs, flag=1))
         rhs = cast(ir.Constant, self.generate(node.rhs, flag=1))
 
+        if lhs.type.is_pointer:
+            lhs = self.builder.load(lhs)
+
         if lhs.type == rhs.type and (lhs.type in (ir.IntType(32), ir.IntType(8))):
             match node.op:
                 case "+": return self.builder.add(lhs, rhs)
@@ -403,11 +409,14 @@ class LLVMGenerator:
     def generate_UnaryOp(self, node: UnaryOp, *, flag: int = 0) -> ir.Value:
         assert self.builder is not None
 
-        rhs = self.generate(node.rhs, flag=1)
-
         match node.op:
-            case "-": return self.builder.neg(rhs)
-            case "not": return self.builder.icmp_signed("!=", rhs, ir.IntType(32)(0))
+            case "-": return self.builder.neg(self.generate(node.rhs, flag=1))
+            case "not": return self.builder.icmp_signed("!=", self.generate(node.rhs, flag=1), ir.IntType(32)(0))
+            case "deref":
+                return self.generate(node.rhs, flag=1)
+
+            case "ref":
+                return self.generate(node.rhs, flag=0)
 
             # ? Same question as logical operators in the binary op section...
 
