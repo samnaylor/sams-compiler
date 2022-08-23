@@ -62,13 +62,13 @@ The following are some of the basic features we're hoping to add to the language
 - [ ] "Imports" or "Modules"
   - [x] "import" keyword
   - [x] Relative to compilation file not compiler
-  - [ ] namespace system? access using `<module name>.<function>`?
+  - [x] namespace system? access using `<module name>.<function>`?
   - [ ] libc extern libraries as a stdlib
 - [x] Structures
   - [x] Define syntax
   - [x] Automatically generated constructors
   - [x] Get attributes
-- [ ] Pointers and References
+- [x] Pointers and References
 
 ### Contributors
 
