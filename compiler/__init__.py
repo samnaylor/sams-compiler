@@ -43,7 +43,6 @@ def compile(filename: str) -> int:
     except CalledProcessError as e:
         sys.exit(e.returncode)
     finally:
-        # os.remove(f"{path.stem}.ll")
-        ...
+        os.remove(f"{path.stem}.ll")
 
     return 0
