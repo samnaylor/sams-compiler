@@ -289,7 +289,7 @@ class LLVMGenerator:
 
         self.builder.branch(cond_block)
         self.builder.position_at_start(cond_block)
-        cond = self.generate(node.condition, flag=1)
+        cond = self.builder.icmp_signed("!=", self.generate(node.condition, flag=1), ir.IntType(32)(0))
         self.builder.cbranch(cond, body_block, post_block)
         self.builder.position_at_start(body_block)
         self.generate(node.body)
@@ -304,7 +304,7 @@ class LLVMGenerator:
     def generate_IfElse(self, node: IfElse, *, flag: int = 0) -> None:
         assert self.builder is not None
 
-        cond = self.generate(node.if_cond, flag=1)
+        cond = self.builder.icmp_signed("!=", self.generate(node.if_cond, flag=1), ir.IntType(32)(0))
 
         if node.if_else is not None:
             with self.builder.if_else(cond) as (then, otherwise):
@@ -360,13 +360,13 @@ class LLVMGenerator:
                 # ? Do these work... or do we need another way of checking the "truthy-ness" of these values
 
                 case "and":
-                    return self.builder.icmp_signed("!=", self.builder.and_(lhs, rhs), ir.IntType(32)(0))
+                    return self.builder.zext(self.builder.icmp_signed("!=", self.builder.and_(lhs, rhs), ir.IntType(32)(0)), ir.IntType(32))
 
                 case "xor":
-                    return self.builder.icmp_signed("!=", self.builder.xor(lhs, rhs), ir.IntType(32)(0))
+                    return self.builder.zext(self.builder.icmp_signed("!=", self.builder.xor(lhs, rhs), ir.IntType(32)(0)), ir.IntType(32))
 
                 case "or":
-                    return self.builder.icmp_signed("!=", self.builder.or_(lhs, rhs), ir.IntType(32)(0))
+                    return self.builder.zext(self.builder.icmp_signed("!=", self.builder.or_(lhs, rhs), ir.IntType(32)(0)), ir.IntType(32))
 
         elif lhs.type == rhs.type == ir.FloatType():
             match node.op:
@@ -377,30 +377,39 @@ class LLVMGenerator:
                 case "%": return self.builder.frem(lhs, rhs)
 
                 case "and":
-                    return self.builder.icmp_signed(
-                        "!=",
-                        self.builder.and_(
-                            self.builder.fcmp_ordered("!=", lhs, ir.FloatType(0)),
-                            self.builder.fcmp_ordered("!=", rhs, ir.FloatType(0)),
-                        ), ir.IntType(0)
+                    return self.builder.zext(
+                        self.builder.icmp_signed(
+                            "!=",
+                            self.builder.and_(
+                                self.builder.fcmp_ordered("!=", lhs, ir.FloatType(0)),
+                                self.builder.fcmp_ordered("!=", rhs, ir.FloatType(0)),
+                            ), ir.IntType(0)
+                        ),
+                        ir.IntType(32)
                     )
 
                 case "xor":
-                    return self.builder.icmp_signed(
-                        "!=",
-                        self.builder.xor(
-                            self.builder.fcmp_ordered("!=", lhs, ir.FloatType(0)),
-                            self.builder.fcmp_ordered("!=", rhs, ir.FloatType(0)),
-                        ), ir.IntType(0)
+                    return self.builder.zext(
+                        self.builder.icmp_signed(
+                            "!=",
+                            self.builder.xor(
+                                self.builder.fcmp_ordered("!=", lhs, ir.FloatType(0)),
+                                self.builder.fcmp_ordered("!=", rhs, ir.FloatType(0)),
+                            ), ir.IntType(0)
+                        ),
+                        ir.IntType(32)
                     )
 
                 case "or":
-                    return self.builder.icmp_signed(
-                        "!=",
-                        self.builder.or_(
-                            self.builder.fcmp_ordered("!=", lhs, ir.FloatType(0)),
-                            self.builder.fcmp_ordered("!=", rhs, ir.FloatType(0)),
-                        ), ir.IntType(0)
+                    return self.builder.zext(
+                        self.builder.icmp_signed(
+                            "!=",
+                            self.builder.or_(
+                                self.builder.fcmp_ordered("!=", lhs, ir.FloatType(0)),
+                                self.builder.fcmp_ordered("!=", rhs, ir.FloatType(0)),
+                            ), ir.IntType(0)
+                        ),
+                        ir.IntType(32)
                     )
         else:
             # TODO: Suggest casting - we don't support implicit casting
@@ -487,9 +496,9 @@ class LLVMGenerator:
         rhs = cast(ir.Constant, self.generate(node.rhs, flag=1))
 
         if lhs.type == rhs.type and lhs.type in (ir.IntType(8), ir.IntType(32)):
-            return self.builder.icmp_signed(node.op, lhs, rhs)
+            return self.builder.zext(self.builder.icmp_signed(node.op, lhs, rhs), ir.IntType(32))
         elif lhs.type == rhs.type and lhs.type in (ir.FloatType(),):
-            return self.builder.fcmp_ordered(node.op, lhs, rhs)
+            return self.builder.zext(self.builder.fcmp_ordered(node.op, lhs, rhs), ir.IntType(32))
         else:
             # TODO: suggest casting
             llvm_generator_error(self.filename, node.location, f"Unsupported comparison `{node.op}` on types {lhs.type} and {rhs.type}")
