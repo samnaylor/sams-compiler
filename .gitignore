@@ -6,3 +6,5 @@ bin/
 
 *.pyc
 /__pycache__
+
+samscompiler/
