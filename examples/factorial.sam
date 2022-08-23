@@ -1,2 +1,5 @@
-fun factorial(n i32) -> i32:
-    return n * ((n > 1) ? (factorial(n - 1)) : 1)
+type FactorialArgs:
+    n i32
+
+fun factorial(args FactorialArgs) -> i32:
+    return args.n * ((args.n > 1) ? (factorial(FactorialArgs(args.n - 1))) : 1)

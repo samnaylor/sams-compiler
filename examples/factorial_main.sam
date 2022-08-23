@@ -3,7 +3,7 @@ import factorial
 
 
 fun main() -> i32:
-    stdio.printf("%d", factorial.factorial(5))
+    stdio.printf("%d", factorial.factorial(factorial.FactorialArgs(5)))
     stdio.putchar(10)
 
     return 0

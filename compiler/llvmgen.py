@@ -556,7 +556,11 @@ class LLVMGenerator:
         if isinstance(target, Namespace):
             return target.get(node.attr)
 
-        idx = self.structures[target.type.pointee.name.replace("struct.", "")].index(node.attr)
+        if self.current_namespace is not None:
+            idx = self.current_namespace.structs[target.type.pointee.name.replace("struct.", "")].index(node.attr)
+        else:
+            idx = self.structures[target.type.pointee.name.replace("struct.", "")].index(node.attr)
+
         attr = self.builder.gep(target, (ir.IntType(32)(0), ir.IntType(32)(idx)), inbounds=True)
 
         if flag == 1:
