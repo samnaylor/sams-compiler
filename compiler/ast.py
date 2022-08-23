@@ -90,7 +90,7 @@ class ComparisonOp(Expr):
 
 @dataclass(slots=True, frozen=True)
 class UnaryOp(Expr):
-    op: Literal["-", "not"]
+    op: Literal["-", "not", "deref"]
     rhs: Expr
 
 

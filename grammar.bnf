@@ -68,6 +68,7 @@ cast           ::= unary
                  | "<" identifier ">" cast
 unary          ::= postfix
                  | "-" unary
+                 | "deref" unary
 postfix        ::= primary
                  | postfix "[" expression "]"
                  | postfix "(" [callargs] ")"

@@ -482,6 +482,9 @@ class Parser:
         if self.match(TokenKind.Minus):
             self.advance()
             return UnaryOp(location, "-", self.parse_unary())
+        elif self.match(TokenKind.Deref):
+            self.advance()
+            return UnaryOp(location, "deref", self.parse_unary())
 
         return self.parse_postfix()
 
