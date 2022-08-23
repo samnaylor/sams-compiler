@@ -2,16 +2,8 @@ import stdio
 import factorial
 
 
-
-
 fun main() -> i32:
-    var i i32 = 0, values [i32, 5] = [1, 2, 3, 4, 5], result i32 = 0
+    stdio.printf("%d", factorial.factorial(5))
+    stdio.putchar(10)
 
-    while i < 5:
-        result = result + factorial(values[i])
-        i = i + 1
-
-    printf("%d", factorial(5))
-    putchar(10)
-
-    return result
+    return 0

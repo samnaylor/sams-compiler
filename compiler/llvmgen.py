@@ -42,6 +42,8 @@ from .ast import (
 from .lexer import generic_error, Location
 from .parser import Parser
 
+from .samtypes import Namespace
+
 
 def llvm_generator_error(filename: str, location: Location, message: str) -> None:
     generic_error("LLVM Generation Error", filename, location, message)
@@ -71,6 +73,9 @@ class LLVMGenerator:
             "float": ir.FloatType()
         }
         self.structures: dict[str, list[str]] = {}
+        self.namespaces: dict[str, Namespace] = {}
+
+        self.current_namespace: Namespace | None = None
 
         self._strcount = -1
 
@@ -127,10 +132,10 @@ class LLVMGenerator:
             self.generate(imp)
 
         for struct in node.structs:
-            self.generate(struct)
+            self.generate(struct, flag=flag)
 
         for ext in node.externs:
-            self.generate(ext)
+            self.generate(ext, flag=flag)
 
         for fdef in node.function_defs:
             self.generate(fdef, flag=flag)
@@ -140,6 +145,9 @@ class LLVMGenerator:
         if node.module_name in self.dependencies:
             return
 
+        self.current_namespace = Namespace(node.module_name)
+        self.namespaces[node.module_name] = self.current_namespace
+
         self.dependencies.add(node.module_name)
 
         path = os.path.join(Path().root, *self.callpath.absolute().parts[:-1], f"{node.module_name}.sam")
@@ -148,6 +156,7 @@ class LLVMGenerator:
             tree = Parser(f.read(), node.module_name).parse()
 
         self.generate(tree, flag=1)
+        self.current_namespace = None
 
     def generate_StructDefinition(self, node: StructDefinition, *, flag: int = 0) -> None:
         struct = self.context.get_identified_type(f"struct.{node.struct_name}")
@@ -164,7 +173,11 @@ class LLVMGenerator:
             body.append(type)
 
         struct.set_body(*body)
-        self.structures[node.struct_name] = names
+
+        if flag == 1:
+            self.current_namespace.structs[node.struct_name] = names
+        else:
+            self.structures[node.struct_name] = names
 
         constructor = ir.Function(self.module, ir.FunctionType(struct, body), node.struct_name)
         builder = ir.IRBuilder(constructor.append_basic_block("entry"))
@@ -176,10 +189,14 @@ class LLVMGenerator:
             builder.store(arg, ptr)
 
         builder.ret(builder.load(alloca))
-        self.functions[node.struct_name] = constructor
+
+        if flag == 1:
+            self.current_namespace.functions[node.struct_name] = constructor
+        else:
+            self.functions[node.struct_name] = constructor
 
     def generate_Extern(self, node: Extern, *, flag: int = 0) -> None:
-        self.generate(node.function_signature)
+        self.generate(node.function_signature, flag=flag)
 
     def generate_FunctionDefinition(self, node: FunctionDefinition, *, flag: int = 0) -> None:
         if flag == 1 and node.function_signature.function_name == "main":
@@ -187,7 +204,7 @@ class LLVMGenerator:
 
         self.locals = {}
 
-        func = cast(ir.Function, self.generate(node.function_signature))
+        func = cast(ir.Function, self.generate(node.function_signature, flag=flag))
         self.builder = ir.IRBuilder(func.append_basic_block("entry"))
 
         for arg in func.args:
@@ -214,7 +231,10 @@ class LLVMGenerator:
         for (arg, param) in zip(function.args, node.function_params):
             arg.name = param.parameter_name
 
-        self.functions[node.function_name] = function
+        if flag == 1:
+            self.current_namespace.functions[node.function_name] = function
+        else:
+            self.functions[node.function_name] = function
 
         return function
 
@@ -235,8 +255,8 @@ class LLVMGenerator:
         for stmt in node.body:
             self.generate(stmt)
 
-        if not self.builder.block.is_terminated:
-            self.builder.unreachable()
+        # if not self.builder.block.is_terminated:
+        #     self.builder.unreachable()
 
     def generate_Break(self, node: Break, *, flag: int = 0) -> None:
         assert self.builder is not None
@@ -397,6 +417,18 @@ class LLVMGenerator:
     def generate_Variable(self, node: Variable, *, flag: int = 0) -> ir.Value:
         assert self.builder is not None
 
+        if self.current_namespace is not None:
+            if (func := self.current_namespace.functions.get(node.var_name)) is not None:
+                return func
+
+            alloca = self.locals[node.var_name]
+            if flag:
+                return self.builder.load(alloca, name=node.var_name)
+            return alloca
+
+        if (ns := self.namespaces.get(node.var_name)) is not None:
+            return ns
+
         if (func := self.functions.get(node.var_name)) is not None:
             return func
 
@@ -520,6 +552,10 @@ class LLVMGenerator:
         # TODO: serious error handling here...
 
         target = self.generate(node.target, flag=0)
+
+        if isinstance(target, Namespace):
+            return target.get(node.attr)
+
         idx = self.structures[target.type.pointee.name.replace("struct.", "")].index(node.attr)
         attr = self.builder.gep(target, (ir.IntType(32)(0), ir.IntType(32)(idx)), inbounds=True)
 

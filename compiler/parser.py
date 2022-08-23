@@ -479,26 +479,28 @@ class Parser:
     def parse_postfix(self) -> Expr:
         lhs = self.parse_primary()
 
-        if self.match(TokenKind.Lsqu):
-            self.advance()
-            index = self.parse_expression()
-            self.expect(TokenKind.Rsqu)
-            return Index(lhs.location, lhs, index)
-        elif self.match(TokenKind.Lpar):
-            self.advance()
-            args: list[Expr] = []
-            if not self.match(TokenKind.Rpar):
-                args = self.parse_callargs()
-            self.expect(TokenKind.Rpar)
-            return Call(lhs.location, lhs, args)
-        elif self.match(TokenKind.Dot):
-            self.advance()
-            attr = self.top.value
-            assert attr is not None
-            self.advance()
-            return Attr(lhs.location, lhs, attr)
-        else:
-            return lhs
+        while self.match(TokenKind.Lsqu, TokenKind.Lpar, TokenKind.Dot):
+
+            if self.match(TokenKind.Lsqu):
+                self.advance()
+                index = self.parse_expression()
+                self.expect(TokenKind.Rsqu)
+                lhs = Index(lhs.location, lhs, index)
+            elif self.match(TokenKind.Lpar):
+                self.advance()
+                args: list[Expr] = []
+                if not self.match(TokenKind.Rpar):
+                    args = self.parse_callargs()
+                self.expect(TokenKind.Rpar)
+                lhs = Call(lhs.location, lhs, args)
+            elif self.match(TokenKind.Dot):
+                self.advance()
+                attr = self.top.value
+                assert attr is not None
+                self.advance()
+                lhs = Attr(lhs.location, lhs, attr)
+
+        return lhs
 
     def parse_primary(self) -> Expr:
         node: Expr
