@@ -24,52 +24,6 @@ Attempting to make something that can self-host 😵‍💫
 * Run the compiler `python main.py <filename>`
 * Run the executable `./bin/<filename>`
 
-## Basic Feature Roadmap
-
-The following are some of the basic features we're hoping to add to the language.
-
-- [x] New statement constructs
-  - [x] If-Else statements
-  - [x] Continue and Break
-- [x] Operators
-  - [x] Comparison
-  - [x] Division
-  - [x] Modulo
-  - [x] Unary
-    - [x] Negative
-  - [x] Bitwise
-    - [x] Shifts
-    - [x] And
-    - [x] Xor
-    - [x] Or
-  - [x] Logical
-    - [x] Not
-    - [x] And
-    - [x] Xor
-    - [x] Or
-- [ ] New primitive data-types
-  - [x] Floating points (f32)
-    - [x] Annotation
-    - [x] Literal
-    - [x] Casting floats-ints and ints-floats
-    - [x] Arithmetic
-  - [ ] Strings
-    - [x] Annotation
-    - [x] Literal
-    - [ ] Escape characters
-    - [x] Indexing
-- [x] Extern functions
-- [ ] "Imports" or "Modules"
-  - [x] "import" keyword
-  - [x] Relative to compilation file not compiler
-  - [x] namespace system? access using `<module name>.<function>`?
-  - [ ] libc extern libraries as a stdlib
-- [x] Structures
-  - [x] Define syntax
-  - [x] Automatically generated constructors
-  - [x] Get attributes
-- [x] Pointers and References
-
 ### Contributors
 
 <table>
