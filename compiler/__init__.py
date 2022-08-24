@@ -33,17 +33,11 @@ def compile(filename: str) -> int:
 
     out = Path("bin").joinpath(path.stem)
 
-    if sys.platform == "windows":
-        cmd = ["clang", f"{path.stem}.ll", "-o" f"{out}.exe"]
-    else:
-        cmd = ["clang", f"{path.stem}.ll", "-o", f"{out}"]
-
     try:
-        check_output(cmd)
+        check_output(["clang", f"{path.stem}.ll", "-o", f"{out}"])
     except CalledProcessError as e:
         sys.exit(e.returncode)
     finally:
-        # os.remove(f"{path.stem}.ll")
-        ...
+        os.remove(f"{path.stem}.ll")
 
     return 0
