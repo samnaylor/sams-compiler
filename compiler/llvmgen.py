@@ -457,7 +457,7 @@ class LLVMGenerator:
 
         self.builder.branch(cond_block)
         self.builder.position_at_start(cond_block)
-        con = self.generate(node.condition, flag=1)
+        con = self.builder.icmp_signed("!=", self.generate(node.condition, flag=1), ir.IntType(32)(0))
         self.builder.cbranch(con, true_block, else_block)
         self.builder.position_at_start(true_block)
         lhs = cast(ir.Constant, self.generate(node.if_true, flag=1))
