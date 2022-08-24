@@ -49,7 +49,7 @@ class Parser:
         self.tokens = tokenise(source, filename)
         self.top = next(self.tokens)
 
-        self.types: set[str] = {"i32", "i8", "float", "string"}
+        self.types: set[str] = {"i32", "i8", "float", "string", "void"}
 
     def advance(self) -> None:
         self.top = next(self.tokens)

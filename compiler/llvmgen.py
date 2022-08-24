@@ -67,6 +67,7 @@ class LLVMGenerator:
         self.dependencies: set[str] = set[str]()
 
         self.types: dict[str, ir.Type] = {
+            "void": ir.VoidType(),
             "i32": ir.IntType(32),
             "i8": ir.IntType(8),
             "string": ir.IntType(8).as_pointer(),
@@ -217,9 +218,22 @@ class LLVMGenerator:
         self.generate(node.function_body)
 
         for block in self.builder.function.basic_blocks:
+            self.builder.position_at_end(block)
             if not block.is_terminated:
-                self.builder.position_at_end(block)
-                self.builder.unreachable()
+                if str(func.return_value) == "void":
+                    self.builder.ret_void()
+                elif str(func.return_value) == "i32":
+                    self.builder.ret(ir.IntType(32)(0))
+                elif str(func.return_value) == "i8":
+                    self.builder.ret(ir.IntType(8)(0))
+                elif str(func.return_value) == "float":
+                    self.builder.ret(ir.FloatType()(0.0))
+                else:
+                    llvm_generator_error(
+                        self.filename,
+                        node.location,
+                        f"Cannot generate default return value for function {func.name} ({func.return_value})"
+                    )
 
         self.builder = None
 
@@ -275,7 +289,10 @@ class LLVMGenerator:
     def generate_Return(self, node: Return, *, flag: int = 0) -> None:
         assert self.builder is not None
 
-        self.builder.ret(self.generate(node.return_value, flag=1))
+        if node.return_value is not None:
+            self.builder.ret(self.generate(node.return_value, flag=1))
+        else:
+            self.builder.ret_void()
 
     def generate_While(self, node: While, *, flag: int = 0) -> None:
         assert self.builder is not None

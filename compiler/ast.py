@@ -126,7 +126,7 @@ class Expr_(Stmt):
 
 @dataclass(slots=True, frozen=True)
 class Return(Stmt):
-    return_value: Expr
+    return_value: Expr | None
 
 
 @dataclass(slots=True, frozen=True)
