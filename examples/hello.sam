@@ -3,7 +3,7 @@ import string
 
 
 fun say_hello() -> void:
-    stdio.puts("Hello, World!")
+    puts("Hello, World!")
 
 
 fun main() -> i32:

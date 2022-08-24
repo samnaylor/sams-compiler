@@ -21,7 +21,7 @@ fun main() -> i32:
     var cm ChangeMe = ChangeMe(5)
     change(ref cm, 10)
 
-    stdio.printf("%d", cm.value)
-    stdio.putchar(10)
+    printf("%d", cm.value)
+    putchar(10)
 
     return x
