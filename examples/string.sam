@@ -1,0 +1,28 @@
+extern malloc(i32) -> i8*
+extern strlen(i8*) -> i32
+extern printf(i8*, ...) -> i32
+extern putchar(i8) -> i32
+
+fun newline() -> void:
+    putchar(<i8>10)
+
+struct String:
+    buffer  i8*
+    length  i32
+
+    constructor String(value i8*) -> String*:
+        var s String* = <String*>malloc(12)
+
+        s->buffer = value
+        s->length = strlen(value)
+
+        return s
+
+fun main() -> i32:
+    var s String* = String("Hello, World!")
+    printf("Buffer: %s", s->buffer)
+    newline()
+    printf("Length: %d", s->length)
+    newline()
+
+    return 0
