@@ -498,7 +498,7 @@ class UnaryOp(Expression):
                 return rhs
 
             case _:
-                raise NotImplementedError(f"UnaryOp({self.op})")
+                error("CodeGenerationError", f"UnaryOp({self.op}) not implemented")
 
 
 @dataclass(slots=True)
@@ -521,7 +521,7 @@ class LogicalOp(Expression):
     rhs: Expression
 
     def generate(self, context: LLVMGeneratorContext, *, as_pointer: bool = False) -> ir.Value:
-        raise NotImplementedError
+        error("CodeGenerationError", f"LogicalOp({self.op}) not implemented")
 
 
 @dataclass(slots=True)
@@ -531,7 +531,21 @@ class BitwiseOp(Expression):
     rhs: Expression
 
     def generate(self, context: LLVMGeneratorContext, *, as_pointer: bool = False) -> ir.Value:
-        raise NotImplementedError
+        lhs = self.lhs.generate(context)
+        rhs = self.rhs.generate(context)
+
+        match self.op:
+            case ">>":
+                return context.builder.ashr(lhs, rhs)
+
+            case "<<":
+                return context.builder.shl(lhs, rhs)
+
+            case "|":
+                return context.builder.or_(lhs, rhs)
+
+            case _:
+                error("CodeGenerationError", f"BitwiseOp({self.op}) not implemented")
 
 
 @dataclass(slots=True)
