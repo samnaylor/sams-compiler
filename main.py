@@ -1524,6 +1524,7 @@ class Parser:
 def main() -> int:
     args = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
     args.add_argument("filename", type=str, help="File to compile")
+    args.add_argument("--emit-llvm", action="store_true", default=False, help="Keep emitted LLVM file")
 
     parsed = args.parse_args()
     filename = Path(parsed.filename)
@@ -1544,15 +1545,16 @@ def main() -> int:
     except Exception as e:
         error("CodeGenerationError", str(e))
     else:
-        with open("tmp.ll", "w") as f:
+        with open(f"{filename.stem}.ll", "w") as f:
             f.write(str(cgen))
 
         try:
-            check_output(["clang", "-O3", "-o", filename.stem, "tmp.ll"])
+            check_output(["clang", "-O3", "-o", filename.stem, f"{filename.stem}.ll"])
         except CalledProcessError as e:
             error("CompilerError", f"{e.output}")
         finally:
-            remove("tmp.ll")
+            if not parsed.emit_llvm:
+                remove(f"{filename.stem}.ll")
 
     return 0
 
