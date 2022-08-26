@@ -1,9 +1,13 @@
 import sys
 
+from os import remove
 from abc import ABC, abstractmethod
 from enum import auto, Enum
 from string import digits, ascii_letters
 from typing import Any, Generator, Literal, cast
+from pathlib import Path
+from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
+from subprocess import CalledProcessError, check_output
 from dataclasses import dataclass, field
 
 from llvmlite import ir
@@ -19,7 +23,7 @@ MAGENTA = "\u001b[35;1m"
 RESET = "\u001b[0m"
 
 
-ErrType = Literal["LexerError", "ParserError", "CodeGenerationError"]
+ErrType = Literal["LexerError", "ParserError", "CodeGenerationError", "CompilerError"]
 
 
 def error(error_type: ErrType, message: str) -> None:
@@ -1518,19 +1522,37 @@ class Parser:
 
 
 def main() -> int:
+    args = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
+    args.add_argument("filename", type=str, help="File to compile")
+
+    parsed = args.parse_args()
+    filename = Path(parsed.filename)
+
+    if not filename.exists():
+        error("CompilerError", f"{filename} could not be found!")
+
     llvm.initialize()
     llvm.initialize_native_target()
     llvm.initialize_native_asmprinter()
 
-    tree = Parser("examples/plus_one.sam").parse()
-    cgen = LLVMGeneratorContext()
+    tree = Parser(str(filename.absolute())).parse()
+    cgen = LLVMGeneratorContext(filename.stem)
 
     try:
         for node in tree:
             node.generate(cgen)
-    finally:
-        print(cgen)
-        # ...
+    except Exception as e:
+        error("CodeGenerationError", str(e))
+    else:
+        with open("tmp.ll", "w") as f:
+            f.write(str(cgen))
+
+        try:
+            check_output(["clang", "-O3", "-o", filename.stem, "tmp.ll"])
+        except CalledProcessError as e:
+            error("CompilerError", f"{e.output}")
+        finally:
+            remove("tmp.ll")
 
     return 0
 
