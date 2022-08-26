@@ -1503,7 +1503,7 @@ class Parser:
 
             case TokenKind.StrLiteral:
                 value = self.advance_and_extract()
-                return StringLiteral(value)
+                return StringLiteral(value[1:-1])
 
             case _:
                 error("ParserError", f"{self.filename}:{self.top.location.line}:{self.top.location.column} - Unexpected {self.top} in parse_constant")
