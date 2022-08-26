@@ -1,4 +1,5 @@
 extern malloc(i32) -> i8*
+extern realloc(i8*, i32) -> i8*
 extern strlen(i8*) -> i32
 extern printf(i8*, ...) -> i32
 extern putchar(i8) -> i32
@@ -6,23 +7,55 @@ extern putchar(i8) -> i32
 fun newline() -> void:
     putchar(<i8>10)
 
+fun nearest_power_of_two(v i32) -> i32:
+    v = v - 1
+    v = v | (v >> 1)
+    v = v | (v >> 2)
+    v = v | (v >> 4)
+    v = v | (v >> 8)
+    v = v | (v >> 16)
+    return v + 1
+
 struct String:
     buffer  i8*
     length  i32
+    maxlen  i32
 
-    constructor String(value i8*) -> String*:
+    constructor String() -> String*:
         var s String* = <String*>malloc(12)
 
-        s->buffer = value
-        s->length = strlen(value)
+        s->buffer = malloc(1)
+        s->length = 0
+        s->maxlen = nearest_power_of_two(s->length)
 
         return s
 
+    method resize() -> void:
+        self->maxlen = nearest_power_of_two(self->maxlen + 1)
+        self->buffer = realloc(self->buffer, self->maxlen)
+
+    method addchar(character i8) -> void:
+        if self->length == self->maxlen:
+            resize(self)
+
+        (self->buffer)[self->length] = character
+        self->length = self->length + 1
+
+    method addstring(string i8*) -> void:
+        var idx i32 = 0, length i32 = strlen(string)
+
+        while idx < length:
+            addchar(self, string[idx])
+            idx = idx + 1
+
+
 fun main() -> i32:
-    var s String* = String("Hello, World!")
-    printf("Buffer: %s", s->buffer)
+    var s String* = String()
+    printf("%s", s->buffer)
     newline()
-    printf("Length: %d", s->length)
+    addchar(s, 'H')
+    addstring(s, "ello, World!")
+    printf("%s", s->buffer)
     newline()
 
     return 0
