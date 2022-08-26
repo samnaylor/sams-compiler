@@ -1,1 +1,0 @@
-extern strlen(str string) -> i32

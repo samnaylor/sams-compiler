@@ -1,9 +1,0 @@
-import stdio
-import factorial
-
-
-fun main() -> i32:
-    printf("%d", factorial(FactorialArgs(5)))
-    putchar(10)
-
-    return 0

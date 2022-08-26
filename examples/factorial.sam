@@ -1,5 +1,0 @@
-type FactorialArgs:
-    n i32
-
-fun factorial(args FactorialArgs) -> i32:
-    return args.n * ((args.n > 1) ? (factorial(FactorialArgs(args.n - 1))) : 1)

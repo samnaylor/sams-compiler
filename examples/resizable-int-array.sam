@@ -1,0 +1,70 @@
+extern free(i32*) -> void
+extern malloc(i32) -> i32*
+extern realloc(i32*, i32) -> i32*
+extern putchar(i8) -> i32
+extern printf(i8*, ...) -> i32
+
+struct IntArray:
+    values  i32*
+    length  i32
+    maxlen  i32
+
+    # Define a custom constructor
+    constructor IntArray() -> IntArray*:
+        var ia IntArray* = <IntArray*>malloc(16)
+
+        ia->values = malloc(4)
+        ia->length = 0
+        ia->maxlen = 1
+
+        return ia
+
+    # Resize method
+    method resize() -> void:
+        self->maxlen = self->maxlen * 2
+        self->values = realloc(self->values, self->maxlen * 4)
+
+    # Get method
+    method get(index i32) -> i32:
+        return (self->values)[index]
+
+    # Pop method
+    method pop() -> i32:
+        self->length = self->length - 1
+        return (self->values)[self->length]
+
+    # Insert method
+    method insert(value i32) -> void:
+        if self->length == self->maxlen:
+            resize(self)
+
+        (self->values)[self->length] = value
+        self->length = self->length + 1
+
+    # Delete method
+    method delete() -> void:
+        free(self->values)
+        self->length = 0
+        self->maxlen = 0
+
+fun main() -> i32:
+    var i i32 = 0, arr IntArray* = IntArray()
+
+    while i < 10:
+        insert(arr, i + 48)
+        i = i + 1
+
+    i = 0
+
+    while i < 10:
+        putchar(<i8>get(arr, i))
+        putchar(<i8>10)
+        i = i + 1
+
+    putchar(<i8>pop(arr))
+    putchar(<i8>10)
+
+    delete(arr)
+    free(<i32*>arr)
+
+    return 0

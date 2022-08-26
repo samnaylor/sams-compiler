@@ -1,48 +1,24 @@
-```bash
-  █████████                             ██              █████████                                      ███  ████
- ███░░░░░███                           ███             ███░░░░░███                                    ░░░  ░░███
-░███    ░░░   ██████   █████████████  ░░░   █████     ███     ░░░   ██████  █████████████   ████████  ████  ░███   ██████  ████████
-░░█████████  ░░░░░███ ░░███░░███░░███      ███░░     ░███          ███░░███░░███░░███░░███ ░░███░░███░░███  ░███  ███░░███░░███░░███
- ░░░░░░░░███  ███████  ░███ ░███ ░███     ░░█████    ░███         ░███ ░███ ░███ ░███ ░███  ░███ ░███ ░███  ░███ ░███████  ░███ ░░░
- ███    ░███ ███░░███  ░███ ░███ ░███      ░░░░███   ░░███     ███░███ ░███ ░███ ░███ ░███  ░███ ░███ ░███  ░███ ░███░░░   ░███
-░░█████████ ░░████████ █████░███ █████     ██████     ░░█████████ ░░██████  █████░███ █████ ░███████  █████ █████░░██████  █████
- ░░░░░░░░░   ░░░░░░░░ ░░░░░ ░░░ ░░░░░     ░░░░░░       ░░░░░░░░░   ░░░░░░  ░░░░░ ░░░ ░░░░░  ░███░░░  ░░░░░ ░░░░░  ░░░░░░  ░░░░░
-                                                                                            ░███
-                                                                                            █████
-                                                                                           ░░░░░
-```
-
 # Sam's Compiler
 
-An AWESOME compiler that's written for a bit of fun.
-Attempting to make something that can self-host 😵‍💫
+Trying to create an awesome little compiler.  
+The aim is to one day be able to self-host, but for now we're just having fun.  
 
-## Running
+Yes, _its Basically just a re-skin of C with a few little bits thrown in._
 
-* Requires Python 3.10+
-* Install requirements `pip install -r requirements.txt`
-* Run the compiler `python main.py <filename>`
-* Run the executable `./bin/<filename>`
+---
+
+### Resources
+
+Here is a list of helpful resources that we are using to help us develop the compiler!
+
+* [LLVMlite documentation](https://llvmlite.readthedocs.io/en/latest/)
+* [LLVM IR and Transform Pipeline](https://www.cl.cam.ac.uk/teaching/1617/L25/3LLVMIRandTransformPipeline.pdf)
+* [Mapping high level constructs to LLVM IR](https://mapping-high-level-constructs-to-llvm-ir.readthedocs.io/en/latest/)
+* [c2llvm-compiler by Jmq14](https://github.com/Jmq14/c2llvm-compiler)
+* [Compiler Explorer](https://godbolt.org/)
+
+---
 
 ### Contributors
 
-<table>
-  <tr>
-    <td align="center">
-      <a href="https://github.com/samnaylor">
-        <img src="https://avatars.githubusercontent.com/u/57679802?v=4" style="border-radius: 100%; height: auto;" width="100px;" />
-        <br />
-        <sub>Sam Naylor</sub>
-      </a>
-      <br />
-    </td>
-    <td align="center">
-      <a href="https://github.com/Wraith29">
-        <img src="https://avatars.githubusercontent.com/u/55260788?v=4" style="border-radius: 100%; height: auto;" width="100px;" />
-        <br />
-        <sub>Isaac Naylor</sub>
-      </a>
-      <br />
-    </td>
-  </tr>
-</table>
+[TODO: see here](https://codepen.io/Amayzin/pen/QPzqbV) 

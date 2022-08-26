@@ -1,5 +1,0 @@
-extern gets(str string) -> string
-extern getchar() -> i32
-extern puts(str string) -> i32
-extern putchar(chr i32) -> i32
-extern printf(fmt string) ... -> i32

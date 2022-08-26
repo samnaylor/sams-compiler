@@ -1,5 +1,0 @@
-RED = "\u001b[31;1m"
-CYAN = "\u001b[36;1m"
-GREEN = "\u001b[32;1m"
-MAGENTA = "\u001b[35;1m"
-RESET = "\u001b[0m"

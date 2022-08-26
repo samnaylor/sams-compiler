@@ -1,0 +1,7 @@
+fun plus_one(x i32*) -> void:
+    *x = *x + 1
+
+fun main() -> i32:
+    var x i32 = 0
+    plus_one(&x)
+    return x
