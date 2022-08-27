@@ -402,7 +402,7 @@ class TypeCast(Expression):
         to_typ = self.to_type.generate(context)
         value = self.value.generate(context)
 
-        if to_typ.is_pointer and value.type.is_pointer:
+        if to_typ.is_pointer:
             return context.builder.bitcast(value, to_typ)
 
         match (str(to_typ), str(value.type)):
