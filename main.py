@@ -140,6 +140,9 @@ class LLVMGeneratorContext:
 
         return f"__{name}_{argtyps}"
 
+    def is_native(self, typ: ir.Type) -> bool:
+        return typ in (i1, i8, i16, i32, i64, float_, double)
+
     def __str__(self) -> str:
         return str(self._module)
 
