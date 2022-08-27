@@ -1,7 +1,36 @@
-fun plus_one(x i32*) -> void:
-    *x = *x + 1
+extern printf(i8*, ...) -> i32
+extern putchar(i8) -> i32
+
+extern malloc(i32) -> i8*
+
+
+fun newline() -> void: putchar(<i8>10)
+
+
+struct Value:
+    inner i32
+
+    constructor Value(value i32) -> Value*:
+        var v Value* = <Value*>malloc(sizeof_Value)
+        v->inner = value
+        return v
+
+    method inc() -> void:
+        self->inner = self->inner + 1
+
+    method dec() -> void:
+        self->inner = self->inner - 1 
+
 
 fun main() -> i32:
-    var x i32 = 0
-    plus_one(&x)
-    return x
+    var v Value* = Value(0)
+
+    printf("%d", v->inner)
+    newline()
+
+    inc(v)
+
+    printf("%d", v->inner)
+    newline()
+
+    return 0

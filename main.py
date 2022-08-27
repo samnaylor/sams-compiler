@@ -72,11 +72,13 @@ class LLVMGeneratorContext:
         self._module = ir.Module(name=name)
         self._context = self._module.context
 
-        self._module.triple = llvm.Target.from_default_triple().triple
+        self._module.triple = llvm.get_process_triple()
+        self._module.data_layout = llvm.Target.from_triple(self._module.triple).create_target_machine(llvm.get_host_cpu_name()).target_data
 
         self._strcount: int = 0
 
         self._locals: dict[str, ir.Value] = {}
+        self._globals: dict[str, ir.GlobalVariable] = {}
         self._externs: set[str] = set[str]()
         self._structs: dict[str, list[str]] = {}
         self._builders: list[ir.IRBuilder] = []
@@ -99,6 +101,15 @@ class LLVMGeneratorContext:
 
     def pop_builder(self) -> None:
         self._builders.pop()
+
+    def get_global_or_local(self, name: str) -> ir.Value:
+        if (global_ := self._globals.get(name)) is not None:
+            return global_
+
+        if (local := self._locals.get(name)) is not None:
+            return local
+
+        error("CodeGenerationError", f"No symbol {name} could be found!")
 
     def get_local(self, name: str) -> ir.Value:
         return self._locals[name]
@@ -243,6 +254,14 @@ class StructDef(Node):
 
         struct.set_body(*types)
         context._structs[self.struct_name] = names
+
+        # NOTE: hack that will only work on this platform...
+        # TODO: get layout for native machine :)
+        data = llvm.create_target_data("e-m:o-i64:64-i128:128-n32:64-S128")
+        sizeof_struct = struct.get_abi_size(data)
+        context._globals[f"sizeof_{self.struct_name}"] = ir.GlobalVariable(context._module, i32, f".sizeof_{self.struct_name}")
+        context._globals[f"sizeof_{self.struct_name}"].initializer = i32(sizeof_struct)
+        context._globals[f"sizeof_{self.struct_name}"].global_constant = True
 
         if self.create_constructor:
             # Automatically generated constructor function
@@ -599,7 +618,7 @@ class Variable(Expression):
     var_name: str
 
     def generate(self, context: LLVMGeneratorContext, *, as_pointer: bool = False) -> ir.Value:
-        ptr = context.get_local(self.var_name)
+        ptr = context.get_global_or_local(self.var_name)
 
         if not as_pointer:
             ptr = context.builder.load(ptr, name=self.var_name)
@@ -1547,8 +1566,8 @@ def main() -> int:
         error("CompilerError", f"{filename} could not be found!")
 
     llvm.initialize()
-    llvm.initialize_native_target()
-    llvm.initialize_native_asmprinter()
+    llvm.initialize_all_targets()
+    llvm.initialize_all_asmprinters()
 
     tree = Parser(str(filename.absolute())).parse()
     cgen = LLVMGeneratorContext(filename.stem)
