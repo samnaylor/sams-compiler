@@ -48,6 +48,12 @@ struct String:
             addchar(self, string[idx])
             idx = idx + 1
 
+    method add(character i8) -> void:
+        addchar(self, character)
+
+    method add(character i32) -> void:
+        addchar(self, <i8>character)
+
 
 fun main() -> i32:
     var s String* = String()
@@ -55,7 +61,7 @@ fun main() -> i32:
     newline()
     addchar(s, 'H')
     addstring(s, "ello, World!")
+    s + <i8>10
     printf("%s", s->buffer)
-    newline()
 
     return 0

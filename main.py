@@ -101,6 +101,12 @@ class LLVMGeneratorContext:
         self._strcount += 1
         return self._strcount
 
+    def is_user_type(self, value: ir.Value) -> bool:
+        if value.is_pointer:
+            return self.is_user_type(value.pointee)
+
+        return isinstance(value, ir.IdentifiedStructType)
+
     def new_builder(self, function: ir.Function) -> None:
         self._builders.append(ir.IRBuilder(function.append_basic_block()))
 
@@ -507,6 +513,15 @@ class BinaryOp(Expression):
     def generate(self, context: LLVMGeneratorContext, *, as_pointer: bool = False) -> ir.Value:
         lhs = self.lhs.generate(context, as_pointer=False)
         rhs = self.rhs.generate(context, as_pointer=False)
+
+        if context.is_user_type(lhs.type):
+            match self.op:
+                case "+": function_name = context.mangle_name("add", lhs.type, rhs.type)
+                case "-": function_name = context.mangle_name("sub", lhs.type, rhs.type)
+                case "*": function_name = context.mangle_name("mul", lhs.type, rhs.type)
+                case _: error("CodeGenerationError", f"{self.op} overload not supported yet!")
+            function = context.get_function(function_name)
+            return context.builder.call(function, [lhs, rhs], name=f".add.{function_name}")
 
         match (str(lhs.type), str(rhs.type)):
             case "i32", "i32":
