@@ -508,18 +508,34 @@ class BinaryOp(Expression):
         lhs = self.lhs.generate(context, as_pointer=False)
         rhs = self.rhs.generate(context, as_pointer=False)
 
-        match self.op:
-            case "+":
-                return context.builder.add(lhs, rhs)
+        match (str(lhs.type), str(rhs.type)):
+            case "i32", "i32":
+                match self.op:
+                    case "+":
+                        return context.builder.add(lhs, rhs)
 
-            case "-":
-                return context.builder.sub(lhs, rhs)
+                    case "-":
+                        return context.builder.sub(lhs, rhs)
 
-            case "*":
-                return context.builder.mul(lhs, rhs)
+                    case "*":
+                        return context.builder.mul(lhs, rhs)
 
-            case _:
-                raise NotImplementedError(f"BinaryOp({self.op})")
+                    case _:
+                        raise NotImplementedError(f"BinaryOp({self.op})")
+
+            case "double", "double":
+                match self.op:
+                    case "+":
+                        return context.builder.fadd(lhs, rhs)
+
+                    case "-":
+                        return context.builder.fsub(lhs, rhs)
+
+                    case "*":
+                        return context.builder.fmul(lhs, rhs)
+
+                    case _:
+                        raise NotImplementedError(f"BinaryOp({self.op})")
 
 
 @dataclass(slots=True)
