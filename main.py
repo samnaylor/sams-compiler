@@ -20,6 +20,7 @@ RED = "\u001b[31;1m"
 CYAN = "\u001b[36;1m"
 GREEN = "\u001b[32;1m"
 MAGENTA = "\u001b[35;1m"
+YELLOW = "\u001b[33;1m"
 RESET = "\u001b[0m"
 
 
@@ -27,8 +28,12 @@ ErrType = Literal["LexerError", "ParserError", "CodeGenerationError", "CompilerE
 
 
 def error(error_type: ErrType, message: str) -> None:
-    print(f"{RED}ERROR:{RESET} {message}")
+    print(f"{RED}ERROR ({error_type}):{RESET} {message}")
     sys.exit(1)
+
+
+def warning(message: str) -> None:
+    print(f"{YELLOW}WARNING:{RESET} {message}")
 
 # endregion
 
@@ -406,14 +411,31 @@ class TypeCast(Expression):
             return context.builder.bitcast(value, to_typ)
 
         match (str(to_typ), str(value.type)):
-            case "i8", "i32":
-                return context.builder.trunc(value, to_typ)
+            case "i1", "i8": return context.builder.icmp_signed("!=", value, i8(0))
+            case "i1", "i16": return context.builder.icmp_signed("!=", value, i16(0))
+            case "i1", "i32": return context.builder.icmp_signed("!=", value, i32(0))
+            case "i1", "i64": return context.builder.icmp_signed("!=", value, i64(0))
 
-            case "double", "i32":
-                return context.builder.sitofp(value, to_typ)
+            case "i8", "i1": return context.builder.zext(value, to_typ)
+            case "i8", ("i16" | "i32" | "i64"): return context.builder.trunc(value, to_typ)
 
-            case "i32", "double":
-                return context.builder.fptosi(value, to_typ)
+            case "i16", ("i1" | "i8"): return context.builder.zext(value, to_typ)
+            case "i16", ("i32" | "i64"): return context.builder.trunc(value, to_typ)
+
+            case "i32", ("i1" | "i8" | "i16"): return context.builder.zext(value, to_typ)
+            case "i32", "i64": return context.builder.trunc(value, to_typ)
+
+            case "i64", ("i1", "i8", "i16", "i32"): return context.builder.trunc(value, to_typ)
+
+            case "float", ("i1", "i8", "i16", "i32", "i64"): return context.builder.fptosi(value, to_typ)
+            case "float", "double": return context.builder.fpext(value, to_typ)
+
+            case "double", ("i1", "i8", "i16", "i32", "i64"): return context.builder.sitofp(value, to_typ)
+            case "double", "float": return context.builder.fptrunc(value, to_typ)
+
+            case a, b if a == b:
+                warning("Redundant cast")
+                return value
 
 
 @dataclass(slots=True)
