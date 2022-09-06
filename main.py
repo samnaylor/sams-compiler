@@ -92,6 +92,10 @@ class LLVMGeneratorContext:
         self.block_stack_start: list[ir.Block] = []
         self.block_stack_end: list[ir.Block] = []
 
+        thing = ir.GlobalVariable(self._module, i32.as_pointer(), "thing")
+        thing.global_constant = True
+        thing.initializer = ir.Constant(i32.as_pointer(), None)
+
     @property
     def builder(self) -> ir.IRBuilder:
         return self._builders[-1]
